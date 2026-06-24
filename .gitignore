@@ -1,0 +1,44 @@
+# 编译产物
+lib/
+obj/
+bin/
+output/
+*.o
+*.a
+*.dll
+*.exe
+*.dylib
+*.so
+*.dll.a
+*.lo
+*.d
+
+# 依赖文件 (自动生成)
+src/dep/
+*/dep/
+
+# 分发目录
+dist/
+
+# 测试文件
+test_*.c
+test_*.exe
+iup.dll
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Lua 示例数据 (已移除 Lua 绑定)
+etc/lexlua/

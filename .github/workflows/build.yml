@@ -1,0 +1,230 @@
+name: Build IUP Single Shared Library (All Platforms)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # ============================================================
+  #  Windows x86_64 → iup.dll (合并 iup+iupgl+iupglcontrols+iupcontrols+iupim+iupimglib)
+  # ============================================================
+  windows-x64:
+    runs-on: windows-latest
+    defaults: { run: { shell: msys2 {0} } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-ftgl
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-zlib
+
+      - name: Fix freetype lib name
+        run: |
+          ln -sf /mingw64/lib/libfreetype.dll.a /mingw64/lib/libfreetype6.dll.a
+          ln -sf /mingw64/lib/libfreetype.a     /mingw64/lib/libfreetype6.a
+
+      # ---------- 编译 CD 库 ----------
+      - name: Download & build CD
+        run: |
+          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/cd.zip -d /tmp/cd_src
+          cp -r /tmp/cd_src/* ../cd
+          cd ../cd/src
+          mingw32-make TEC_UNAME=mingw6_64 MINGW6_64=/mingw64
+
+      # ---------- 编译 IM 库 ----------
+      - name: Download & build IM
+        run: |
+          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/im.zip -d /tmp/im_src
+          cp -r /tmp/im_src/* ../im
+          cd ../im/src
+          mingw32-make TEC_UNAME=mingw6_64 MINGW6_64=/mingw64
+
+      # ---------- 编译 IUP 所有模块 ----------
+      - name: Build IUP modules
+        run: |
+          cd $GITHUB_WORKSPACE
+          mingw32-make TEC_UNAME=mingw6_64 MINGW6_64=/mingw64 \
+            FREETYPE_INC=/mingw64/include/freetype2 FTGL=/mingw64 FTGL_LIB=/mingw64/lib \
+            CD=$GITHUB_WORKSPACE/../cd IM=$GITHUB_WORKSPACE/../im \
+            iup iupgl iupglcontrols iupcontrols iupim iupimglib
+
+      # ---------- 合并成单个 DLL ----------
+      - name: Link single iup.dll
+        run: |
+          mkdir -p dist/windows-x64/include
+          OBJS=$(find obj/mingw6_64 obj/iupgl/mingw6_64 \
+                      obj/iupglcontrols/mingw6_64 obj/iupcontrols/mingw6_64 \
+                      obj/iupim/mingw6_64 obj/iupimglib/mingw6_64 \
+                      -name '*.o')
+          gcc -shared -o dist/windows-x64/iup.dll $OBJS \
+            -static-libgcc -Wl,--out-implib=dist/windows-x64/libiup.dll.a \
+            ../cd/lib/mingw6_64/libcd.a \
+            ../im/lib/mingw6_64/libim.a ../im/lib/mingw6_64/libim_process.a \
+            -lftgl -lfreetype -lglu32 -lopengl32 \
+            -lpng -lz \
+            -lgdi32 -lcomctl32 -lcomdlg32 -lole32 -loleaut32 \
+            -lkernel32 -luser32 -ladvapi32 -lshell32 -luuid
+          cp include/*.h dist/windows-x64/include/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iup-windows-x64
+          path: dist/windows-x64/
+
+  # ============================================================
+  #  Linux amd64 → libiup.so
+  # ============================================================
+  linux-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev libftgl-dev libpng-dev zlib1g-dev
+
+      - name: Download & build CD
+        run: |
+          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/cd.zip -d /tmp/cd_src
+          mv /tmp/cd_src/* ../cd
+          cd ../cd/src
+          make
+
+      - name: Download & build IM
+        run: |
+          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/im.zip -d /tmp/im_src
+          mv /tmp/im_src/* ../im
+          cd ../im/src
+          make
+
+      - name: Build IUP modules
+        run: |
+          make USE_GTK3=Yes CD=$PWD/../cd IM=$PWD/../im \
+            iup iupgl iupglcontrols iupcontrols iupim iupimglib
+
+      - name: Link single libiup.so
+        run: |
+          mkdir -p dist/linux-amd64/include
+          OBJS=$(find obj/ obj/iupgl/ obj/iupglcontrols/ obj/iupcontrols/ obj/iupim/ obj/iupimglib/ -name '*.o')
+          gcc -shared -o dist/linux-amd64/libiup.so $OBJS \
+            ../cd/lib/Linux*/libcd.a ../im/lib/Linux*/libim.a ../im/lib/Linux*/libim_process.a \
+            -lftgl -lfreetype -lGLU -lGL \
+            -lgtk-3 -lgdk-3 -lpango-1.0 -lcairo -lgdk_pixbuf-2.0 \
+            -lgobject-2.0 -lglib-2.0 -lpng -lz
+          cp include/*.h dist/linux-amd64/include/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iup-linux-amd64
+          path: dist/linux-amd64/
+
+  # ============================================================
+  #  Linux arm64 → libiup.so
+  # ============================================================
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev libftgl-dev libpng-dev zlib1g-dev
+
+      - name: Download & build CD
+        run: |
+          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/cd.zip -d /tmp/cd_src
+          mv /tmp/cd_src/* ../cd
+          cd ../cd/src
+          make
+
+      - name: Download & build IM
+        run: |
+          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/im.zip -d /tmp/im_src
+          mv /tmp/im_src/* ../im
+          cd ../im/src
+          make
+
+      - name: Build IUP modules
+        run: |
+          make USE_GTK3=Yes CD=$PWD/../cd IM=$PWD/../im \
+            iup iupgl iupglcontrols iupcontrols iupim iupimglib
+
+      - name: Link single libiup.so
+        run: |
+          mkdir -p dist/linux-arm64/include
+          OBJS=$(find obj/ obj/iupgl/ obj/iupglcontrols/ obj/iupcontrols/ obj/iupim/ obj/iupimglib/ -name '*.o')
+          gcc -shared -o dist/linux-arm64/libiup.so $OBJS \
+            ../cd/lib/Linux*/libcd.a ../im/lib/Linux*/libim.a ../im/lib/Linux*/libim_process.a \
+            -lftgl -lfreetype -lGLU -lGL \
+            -lgtk-3 -lgdk-3 -lpango-1.0 -lcairo -lgdk_pixbuf-2.0 \
+            -lgobject-2.0 -lglib-2.0 -lpng -lz
+          cp include/*.h dist/linux-arm64/include/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iup-linux-arm64
+          path: dist/linux-arm64/
+
+  # ============================================================
+  #  macOS arm64 → libiup.dylib
+  # ============================================================
+  macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install deps
+        run: brew install ftgl
+
+      - name: Download & build CD
+        run: |
+          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/cd.zip -d /tmp/cd_src
+          mv /tmp/cd_src/* ../cd
+          cd ../cd/src
+          make
+
+      - name: Download & build IM
+        run: |
+          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          unzip -q /tmp/im.zip -d /tmp/im_src
+          mv /tmp/im_src/* ../im
+          cd ../im/src
+          make
+
+      - name: Build IUP modules
+        run: |
+          make CD=$PWD/../cd IM=$PWD/../im \
+            iup iupgl iupglcontrols iupcontrols iupim iupimglib
+
+      - name: Link single libiup.dylib
+        run: |
+          mkdir -p dist/macos-arm64/include
+          OBJS=$(find obj/ obj/iupgl/ obj/iupglcontrols/ obj/iupcontrols/ obj/iupim/ obj/iupimglib/ -name '*.o')
+          gcc -shared -o dist/macos-arm64/libiup.dylib $OBJS \
+            ../cd/lib/Darwin*/libcd.a ../im/lib/Darwin*/libim.a ../im/lib/Darwin*/libim_process.a \
+            -lftgl -lfreetype \
+            -framework OpenGL -framework Cocoa -framework Carbon
+          cp include/*.h dist/macos-arm64/include/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iup-macos-arm64
+          path: dist/macos-arm64/

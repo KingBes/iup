@@ -1,0 +1,12 @@
+$(OBJDIR)/iup_glcanvas.o: iup_glcanvas.c ../include/iup.h ../include/iupkey.h \
+ ../include/iupdef.h ../include/iup_export.h ../include/iupcbs.h \
+ ../include/iupkey.h ../src/iup_object.h ../src/iup_class.h \
+ ../src/iup_table.h ../src/iup_classbase.h ../src/iup_register.h \
+ ../src/iup_attrib.h ../src/iup_str.h ../src/iup_stdcontrols.h \
+ ../src/iup_layout.h ../src/iup_drv.h
+$(OBJDIR)/iup_glcanvas_win.o: iup_glcanvas_win.c ../include/iup.h \
+ ../include/iupkey.h ../include/iupdef.h ../include/iup_export.h \
+ ../include/iupcbs.h ../include/iupgl.h ../src/iup_object.h \
+ ../src/iup_class.h ../src/iup_table.h ../src/iup_classbase.h \
+ ../src/iup_attrib.h ../src/iup_str.h ../src/iup_stdcontrols.h \
+ ../src/iup_assert.h ../src/iup_register.h
