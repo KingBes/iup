@@ -26,6 +26,8 @@ jobs:
             mingw-w64-x86_64-ftgl
             mingw-w64-x86_64-libpng
             mingw-w64-x86_64-zlib
+            unzip
+            file
 
       - name: Fix freetype lib name
         run: |
@@ -35,7 +37,8 @@ jobs:
       # ---------- 编译 CD 库 ----------
       - name: Download & build CD
         run: |
-          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download'
+          file /tmp/cd.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/cd.zip -d /tmp/cd_src
           cp -r /tmp/cd_src/* ../cd
           cd ../cd/src
@@ -44,7 +47,8 @@ jobs:
       # ---------- 编译 IM 库 ----------
       - name: Download & build IM
         run: |
-          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download'
+          file /tmp/im.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/im.zip -d /tmp/im_src
           cp -r /tmp/im_src/* ../im
           cd ../im/src
@@ -97,7 +101,8 @@ jobs:
 
       - name: Download & build CD
         run: |
-          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download'
+          file /tmp/cd.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/cd.zip -d /tmp/cd_src
           mv /tmp/cd_src/* ../cd
           cd ../cd/src
@@ -105,7 +110,8 @@ jobs:
 
       - name: Download & build IM
         run: |
-          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download'
+          file /tmp/im.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/im.zip -d /tmp/im_src
           mv /tmp/im_src/* ../im
           cd ../im/src
@@ -147,7 +153,8 @@ jobs:
 
       - name: Download & build CD
         run: |
-          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download'
+          file /tmp/cd.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/cd.zip -d /tmp/cd_src
           mv /tmp/cd_src/* ../cd
           cd ../cd/src
@@ -155,7 +162,8 @@ jobs:
 
       - name: Download & build IM
         run: |
-          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download'
+          file /tmp/im.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/im.zip -d /tmp/im_src
           mv /tmp/im_src/* ../im
           cd ../im/src
@@ -195,7 +203,8 @@ jobs:
 
       - name: Download & build CD
         run: |
-          curl -kL -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/cd.zip 'https://sourceforge.net/projects/canvasdraw/files/5.14/cd-5.14_Sources.zip/download'
+          file /tmp/cd.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/cd.zip -d /tmp/cd_src
           mv /tmp/cd_src/* ../cd
           cd ../cd/src
@@ -203,7 +212,8 @@ jobs:
 
       - name: Download & build IM
         run: |
-          curl -kL -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download?use_mirror=autoselect'
+          curl -fsSL -A 'Mozilla/5.0' --retry 3 --retry-delay 5 -o /tmp/im.zip 'https://sourceforge.net/projects/imtoolkit/files/3.15/im-3.15_Sources.zip/download'
+          file /tmp/im.zip | grep -q 'Zip' || { echo 'Downloaded file is not a valid zip'; exit 1; }
           unzip -q /tmp/im.zip -d /tmp/im_src
           mv /tmp/im_src/* ../im
           cd ../im/src
