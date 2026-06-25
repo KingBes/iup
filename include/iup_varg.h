@@ -1,8 +1,8 @@
 /** \file
- * \brief IUP API with explicit variable argument parameters.
- *
- * See Copyright Notice in "iup.h"
- */
+* \brief IUP API with explicit variable argument parameters.
+*
+* See Copyright Notice in "iup.h"
+*/
 
 #ifndef __IUP_VARG_H 
 #define __IUP_VARG_H
@@ -40,8 +40,13 @@ IUP_API void      IupMessageV(const char *title, const char *format, va_list arg
 IUP_API Ihandle*  IupParamBoxV(Ihandle* param, va_list arglist);
 IUP_API int       IupGetParamV(const char* title, Iparamcb action, void* user_data, const char* format, va_list arglist);
 
-#ifdef __cplusplus
-}
+/* must include iupglcontrols before this file to enable this declaration */
+#ifdef __IUPGLCONTROLS_H  
+#ifndef IUP_GLCONTROLS_API
+#define IUP_GLCONTROLS_API
 #endif
+IUP_GLCONTROLS_API Ihandle*  IupGLCanvasBoxV(Ihandle* child, va_list arglist);
+#endif
+
 
 #endif

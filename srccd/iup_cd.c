@@ -82,7 +82,7 @@ cdContext* cdContextIup(void)
   cdcreatecanvasNATIVE = ctx->cxCreateCanvas;
 
   cdIupContext = *ctx;
-  cdIupContext.cxCreateCanvas = cdcreatecanvasIUP;
+  cdIupContext.cxCreateCanvas = (void(*)(cdCanvas*,void*))cdcreatecanvasIUP;
 
   return &cdIupContext;
 }
@@ -123,7 +123,7 @@ cdContext* cdContextIupDBuffer(void)
   cdcreatecanvasDBUFFER = ctx->cxCreateCanvas;
 
   cdIupContextDBuffer = *ctx;
-  cdIupContextDBuffer.cxCreateCanvas = cdcreatecanvasIUP_DBUFFER;
+  cdIupContextDBuffer.cxCreateCanvas = (void(*)(cdCanvas*,void*))cdcreatecanvasIUP_DBUFFER;
 
   return &cdIupContextDBuffer;
 }
@@ -164,7 +164,7 @@ cdContext* cdContextIupDBufferRGB(void)
   cdcreatecanvasDBUFFERRGB = ctx->cxCreateCanvas;
 
   cdIupContextDBufferRGB = *ctx;
-  cdIupContextDBufferRGB.cxCreateCanvas = cdcreatecanvasIUP_DBUFFERRGB;
+  cdIupContextDBufferRGB.cxCreateCanvas = (void(*)(cdCanvas*,void*))cdcreatecanvasIUP_DBUFFERRGB;
 
   return &cdIupContextDBufferRGB;
 }

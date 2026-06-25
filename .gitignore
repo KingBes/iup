@@ -1,44 +1,52 @@
-# 编译产物
-lib/
-obj/
-bin/
-output/
-*.o
-*.a
-*.dll
-*.exe
-*.dylib
-*.so
-*.dll.a
-*.lo
-*.d
+# ===== Build outputs =====
+build/obj/
+build/obj_linux/
+build/obj_macos/
+build/*.o
+build/*.dll
+build/*.exe
+build/*.a
+build/*.def
+build/test_out.txt
+build/test_img.txt
+build/link_static.sh
+build/ftgl_stub.cpp
+build/ftgl_stub.o
+build/linux/
+build/macos/
+build/windows-x86_64/
+build/linux-x86_64/
+build/linux-aarch64/
+build/macos-aarch64/
+build/*.so
+build/*.dylib
 
-# 依赖文件 (自动生成)
-src/dep/
-*/dep/
+# ===== Downloaded archives =====
+*.tar.gz
+*.tar.xz
+*.zip
+!etc/*.zip
 
-# 分发目录
-dist/
-
-# 测试文件
-test_*.c
-test_*.exe
-iup.dll
-
-# IDE / 编辑器
+# ===== Editor / IDE =====
+.vs/
 .vscode/
-.idea/
-*.swp
-*.swo
-*~
+*.suo
+*.user
+*.sdf
+*.opensdf
+*.ipch
+*.aps
 
-# macOS
+# ===== OS =====
 .DS_Store
-*.dSYM/
-
-# Windows
 Thumbs.db
-Desktop.ini
+desktop.ini
 
-# Lua 示例数据 (已移除 Lua 绑定)
-etc/lexlua/
+# ===== Temp =====
+iup.def
+config_lua_module
+dep/
+src/dep/
+srcglcontrols/dep/
+srcscintilla/dep/
+srcgl/dep/

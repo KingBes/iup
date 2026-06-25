@@ -10,9 +10,9 @@
 
 #include <iup.h>
 #include <iupcbs.h>
-#include <iup_config.h>    /* public API */
 
 #include "iup_object.h"
+#include "iup_config.h"
 #include "iup_linefile.h"
 #include "iup_str.h"
 #include "iup_attrib.h"
@@ -302,11 +302,6 @@ IUP_API int IupConfigGetVariableIntDef(Ihandle* ih, const char* group, const cha
   else
     return IupConfigGetVariableInt(ih, group, key);
 }
-
-/* forward declarations - GCC 16 strict */
-IUP_API int IupConfigGetVariableIntId(Ihandle* ih, const char* group, const char* key, int id);
-IUP_API const char* IupConfigGetVariableStrId(Ihandle* ih, const char* group, const char* key, int id);
-IUP_API double IupConfigGetVariableDoubleId(Ihandle* ih, const char* group, const char* key, int id);
 
 IUP_API int IupConfigGetVariableIntIdDef(Ihandle* ih, const char* group, const char* key, int id, int def)
 {

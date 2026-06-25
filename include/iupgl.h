@@ -1,16 +1,9 @@
 /** \file
- * \brief OpenGL Canvas 控件
+ * \brief OpenGL canvas for Iup.
  *
- * 提供 OpenGL 渲染上下文，用法类似 IupCanvas 但使用 GL 绘制。
- * 使用前需调用 IupGLCanvasOpen()。
- * 需要链接 OpenGL (libopengl32)。
- *
- * 用法:
- *   IupGLCanvasOpen();
- *   Ihandle* gl = IupGLCanvas(NULL);
- *   IupSetCallback(gl, "ACTION", gl_render);
+ * See Copyright Notice in "iup.h"
  */
-
+ 
 #ifndef __IUPGL_H 
 #define __IUPGL_H
 
@@ -18,40 +11,83 @@
 extern "C" {
 #endif
 
-/*---------------- OpenGL 缓冲区属性 (在控件映射前设置) ----------------*/
-#define IUP_BUFFER    "BUFFER"      /* "SINGLE"(默认) 或 "DOUBLE"(双缓冲) */
-#define IUP_STEREO    "STEREO"      /* "YES"/"NO" 立体视觉 */
-#define IUP_BUFFER_SIZE  "BUFFER_SIZE"  /* 索引模式位深 */
-#define IUP_RED_SIZE  "RED_SIZE"    /* 红色位数 */
-#define IUP_GREEN_SIZE "GREEN_SIZE" /* 绿色位数 */
-#define IUP_BLUE_SIZE "BLUE_SIZE"   /* 蓝色位数 */
-#define IUP_ALPHA_SIZE "ALPHA_SIZE" /* 透明度位数 */
-#define IUP_DEPTH_SIZE "DEPTH_SIZE" /* 深度缓冲位数 */
-#define IUP_STENCIL_SIZE "STENCIL_SIZE" /* 模板缓冲位数 */
+/* Attributes 
+** To set the appropriate visual (pixel format) the following
+** attributes may be specified. Their values should be set
+** before the canvas is mapped to the scrren.
+** After mapping, changing their values has no effect.
+*/
+#ifndef IUP_BUFFER    /* IUP_SINGLE (defaut) or IUP_DOUBLE */
+#define IUP_BUFFER    "BUFFER"
+#endif
+#ifndef IUP_STEREO    /* IUP_NO (defaut) or IUP_YES */
+#define IUP_STEREO     "STEREO"
+#endif
+#ifndef IUP_BUFFER_SIZE    /* Number of bits if index mode */
+#define IUP_BUFFER_SIZE    "BUFFER_SIZE"
+#endif
+#ifndef IUP_RED_SIZE    /* Number of red bits */
+#define IUP_RED_SIZE    "RED_SIZE"
+#endif
+#ifndef IUP_GREEN_SIZE    /* Number of green bits */
+#define IUP_GREEN_SIZE    "GREEN_SIZE"
+#endif
+#ifndef IUP_BLUE_SIZE    /* Number of blue bits */
+#define IUP_BLUE_SIZE    "BLUE_SIZE"
+#endif
+#ifndef IUP_ALPHA_SIZE    /* Number of alpha bits */
+#define IUP_ALPHA_SIZE    "ALPHA_SIZE"
+#endif
+#ifndef IUP_DEPTH_SIZE    /* Number of bits in depth buffer */
+#define IUP_DEPTH_SIZE    "DEPTH_SIZE"
+#endif
+#ifndef IUP_STENCIL_SIZE  /* Number of bits in stencil buffer */
+#define IUP_STENCIL_SIZE  "STENCIL_SIZE"
+#endif
+#ifndef IUP_ACCUM_RED_SIZE  /* Number of red bits in accum. buffer */
+#define IUP_ACCUM_RED_SIZE  "ACCUM_RED_SIZE"
+#endif
+#ifndef IUP_ACCUM_GREEN_SIZE  /* Number of green bits in accum. buffer */
+#define IUP_ACCUM_GREEN_SIZE  "ACCUM_GREEN_SIZE"
+#endif
+#ifndef IUP_ACCUM_BLUE_SIZE  /* Number of blue bits in accum. buffer */
+#define IUP_ACCUM_BLUE_SIZE  "ACCUM_BLUE_SIZE"
+#endif
+#ifndef IUP_ACCUM_ALPHA_SIZE  /* Number of alpha bits in accum. buffer */
+#define IUP_ACCUM_ALPHA_SIZE  "ACCUM_ALPHA_SIZE"
+#endif
 
+
+/* Attribute values */
+#ifndef IUP_DOUBLE
 #define IUP_DOUBLE  "DOUBLE"
+#endif
+#ifndef IUP_SINGLE
 #define IUP_SINGLE  "SINGLE"
-#define IUP_RGBA    "RGBA"
+#endif
+#ifndef IUP_INDEX
+#define IUP_INDEX  "INDEX"
+#endif
+#ifndef IUP_RGBA
+#define IUP_RGBA  "RGBA"
+#endif
+#ifndef IUP_YES
+#define IUP_YES    "YES"
+#endif
+#ifndef IUP_NO
+#define IUP_NO    "NO"
+#endif
 
-/* 初始化 OpenGL 绑定 */
 void IupGLCanvasOpen(void);
 
-/* 创建 OpenGL 画布控件 */
 Ihandle *IupGLCanvas(const char *action);
-/* GL 背景框 */
 Ihandle* IupGLBackgroundBox(Ihandle* child);
 
-/* 设置当前 GL 上下文 */
 void IupGLMakeCurrent(Ihandle* ih);
-/* 检查是否为当前上下文 */
 int IupGLIsCurrent(Ihandle* ih);
-/* 交换缓冲区 (双缓冲模式) */
 void IupGLSwapBuffers(Ihandle* ih);
-/* 设置调色板 */
 void IupGLPalette(Ihandle* ih, int index, float r, float g, float b);
-/* 使用位图字体 */
 void IupGLUseFont(Ihandle* ih, int first, int count, int list_base);
-/* 等待 GL 操作完成 */
 void IupGLWait(int gl);
 
 #ifdef __cplusplus

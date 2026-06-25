@@ -520,7 +520,7 @@ static cdContext cdIupDrawContext =
                  CD_CAP_LINECAP | CD_CAP_LINEJOIN | CD_CAP_PATH | CD_CAP_BEZIER |
                  CD_CAP_PALETTE | CD_CAP_CLIPPOLY | CD_CAP_REGION | CD_CAP_CHORD),
   CD_CTX_WINDOW,
-  cdcreatecanvas,
+  (void(*)(cdCanvas*,void*))cdcreatecanvas,
   cdinittable,
   NULL,
   NULL,

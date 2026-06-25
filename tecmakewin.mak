@@ -1304,7 +1304,7 @@ ifdef USE_IUPWEB
   ifdef USE_IUPLUA
     LIBS += iupluaweb$(LIBLUA_SFX)
   endif
-  LIBS += iupweb comsuppw
+  LIBS += iupweb iupole comsuppw
 endif
 
 ifdef USE_IMLUA
