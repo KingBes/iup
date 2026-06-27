@@ -70,7 +70,7 @@ INCLUDES = -Iinclude -Isrc -Isrc/win -Isrc/win/wdl \
            -Icd/src/gdiplus \
            -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg \
            -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 \
-           -IC:/env/msys2/mingw64/include/freetype2
+           -I$(MSYSTEM_PREFIX)/include/freetype2
 
 # ===================================================================
 # === IUP 核心 ===

@@ -2150,7 +2150,7 @@ static char* iFlatTabsGetExtraBoxAttrib(Ihandle* ih, int id)
   int extra_buttons = iupAttribGetInt(ih, "EXTRABUTTONS");
   if (extra_buttons && id >= 1 && id <= extra_buttons)
   {
-    int xmin, ymin, xmax, ymax;
+    int xmin = 0, ymin = 0, xmax = 0, ymax = 0;
     int tabType = iupAttribGetInt(ih, "_IUPTAB_TYPE");
     int img_position = iupFlatGetImagePosition(iupAttribGetStr(ih, "TABSIMAGEPOSITION"));
     int horiz_padding, vert_padding;
