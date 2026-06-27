@@ -10,7 +10,6 @@ build/*.def
 build/test_out.txt
 build/test_img.txt
 build/link_static.sh
-build/ftgl_stub.cpp
 build/ftgl_stub.o
 build/linux/
 build/macos/

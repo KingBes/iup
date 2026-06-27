@@ -30,7 +30,7 @@ compile_c() {
     local src="$1" dir="$2"
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
-    echo "  [CC] $src"
+    echo "  [CC] $src" >&2
     $CC -c $CFLAGS $DEFS $INCLUDES -o "$obj" "$src"
     echo "$obj"
 }
@@ -39,7 +39,7 @@ compile_m() {
     local src="$1" dir="$2"
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
-    echo "  [M]  $src"
+    echo "  [M]  $src" >&2
     $CC -c $OBJCFLAGS $DEFS $INCLUDES -o "$obj" "$src"
     echo "$obj"
 }
@@ -48,7 +48,7 @@ compile_cxx() {
     local src="$1" dir="$2"
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
-    echo "  [CXX] $src"
+    echo "  [CXX] $src" >&2
     $CXX -c $CXXFLAGS $DEFS $INCLUDES -o "$obj" "$src"
     echo "$obj"
 }

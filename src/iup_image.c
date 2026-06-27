@@ -1162,8 +1162,8 @@ static void iImageDestroyMethod(Ihandle* ih)
 IUP_API Ihandle* IupImage(int width, int height, const unsigned char *imgdata)
 {
   void *params[4];
-  params[0] = (void*)width;
-  params[1] = (void*)height;
+  params[0] = (void*)(intptr_t)width;
+  params[1] = (void*)(intptr_t)height;
   params[2] = imgdata ? (void*)imgdata : (void*)-1;
   params[3] = (void*)-1;
   return IupCreatev("image", params);
@@ -1172,8 +1172,8 @@ IUP_API Ihandle* IupImage(int width, int height, const unsigned char *imgdata)
 IUP_API Ihandle* IupImageRGB(int width, int height, const unsigned char *imgdata)
 {
   void *params[4];
-  params[0] = (void*)width;
-  params[1] = (void*)height;
+  params[0] = (void*)(intptr_t)width;
+  params[1] = (void*)(intptr_t)height;
   params[2] = imgdata ? (void*)imgdata : (void*)-1;
   params[3] = (void*)-1;
   return IupCreatev("imagergb", params);
@@ -1182,8 +1182,8 @@ IUP_API Ihandle* IupImageRGB(int width, int height, const unsigned char *imgdata
 IUP_API Ihandle* IupImageRGBA(int width, int height, const unsigned char *imgdata)
 {
   void *params[4];
-  params[0] = (void*)width;
-  params[1] = (void*)height;
+  params[0] = (void*)(intptr_t)width;
+  params[1] = (void*)(intptr_t)height;
   params[2] = imgdata ? (void*)imgdata : (void*)-1;
   params[3] = (void*)-1;
   return IupCreatev("imagergba", params);

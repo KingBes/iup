@@ -18,8 +18,8 @@ CXX=g++
 
 # ===== Common flags =====
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DNO_CXX11_REGEX"
-CFLAGS="-fPIC -Wall -O2 -fpermissive -Wno-unused-function -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-missing-braces"
-CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas"
+CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-missing-braces"
+CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -fpermissive -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas"
 
 GTK_CFLAGS=$(pkg-config --cflags gtk+-3.0 2>/dev/null || echo "")
 FREETYPE_CFLAGS=$(pkg-config --cflags freetype2 2>/dev/null || echo "")
@@ -34,7 +34,7 @@ compile_c() {
     local src="$1" dir="$2"
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
-    echo "  [CC] $src"
+    echo "  [CC] $src" >&2
     $CC -c $CFLAGS $DEFS $INCLUDES -o "$obj" "$src"
     echo "$obj"
 }
@@ -43,7 +43,7 @@ compile_cxx() {
     local src="$1" dir="$2"
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
-    echo "  [CXX] $src"
+    echo "  [CXX] $src" >&2
     $CXX -c $CXXFLAGS $DEFS $INCLUDES -o "$obj" "$src"
     echo "$obj"
 }
