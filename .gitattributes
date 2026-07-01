@@ -1,0 +1,6 @@
+# Shell scripts must use LF (Linux/macOS CI)
+*.sh text eol=lf
+
+# Windows scripts keep CRLF
+*.bat text eol=crlf
+*.ps1 text eol=crlf

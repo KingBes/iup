@@ -1,7 +1,7 @@
 #!/bin/bash
 # ===================================================================
-#  IUP macOS Cocoa Build — 单 .dylib + .a + headers (零外部依赖)
-#  依赖: Xcode CLT + Homebrew freetype (静态链接)
+#  IUP macOS Cocoa Build 鈥?鍗?.dylib + .a + headers (闆跺閮ㄤ緷璧?
+#  渚濊禆: Xcode CLT + Homebrew freetype (闈欐€侀摼鎺?
 # ===================================================================
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -24,7 +24,7 @@ else
     HOMEBREW_PREFIX=""
 fi
 
-# 如果有 Homebrew freetype（只用动态 .dylib，Homebrew bottles 不含 .a）
+# 濡傛灉鏈?Homebrew freetype锛堝彧鐢ㄥ姩鎬?.dylib锛孒omebrew bottles 涓嶅惈 .a锛?
 FREETYPE_INC=""
 FREETYPE_LIB=""
 if [ -n "$HOMEBREW_PREFIX" ] && [ -f "$HOMEBREW_PREFIX/include/ft2build.h" ]; then
@@ -93,7 +93,7 @@ for f in src/cocoa/*.m src/cocoa/*.c; do
     fi
 done
 
-# ===== IUP Modules (排除 Windows 专有文件) =====
+# ===== IUP Modules (鎺掗櫎 Windows 涓撴湁鏂囦欢) =====
 echo "[3/5] IUP Modules"
 for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio; do
     [ -d "$d" ] || continue
@@ -111,15 +111,15 @@ done
 
 # ===== CD + IM =====
 echo "[4/5] CD + IM Libraries"
-# CD — 使用便携后端 (跳过 win32/gdiplus/X11, 以及需要 FTGL 的 cdgl)
+# CD 鈥?浣跨敤渚挎惡鍚庣 (璺宠繃 win32/gdiplus/X11, 浠ュ強闇€瑕?FTGL 鐨?cdgl)
 for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c; do
     [ -f "$f" ] || continue
-    [[ "$f" == *cdgl.c ]] && continue  # 需要 FTGL，macOS 不提供
+    [[ "$f" == *cdgl.c ]] && continue  # 闇€瑕?FTGL锛宮acOS 涓嶆彁渚?
     ALL_OBJ+=" $(compile_c "$f" "cd/")"
 done
 
-# IM core (portable — 排除 Win32 专属文件)
+# IM core (portable 鈥?鎺掗櫎 Win32 涓撳睘鏂囦欢)
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
     [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* ]] && continue
@@ -141,7 +141,7 @@ for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
     done
 done
 
-# ===== Scintilla (排除 win32 平台层) =====
+# ===== Scintilla (鎺掗櫎 win32 骞冲彴灞? =====
 echo "[5/5] Scintilla"
 SCIBASE="srcscintilla/scintilla3112"
 for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; do
@@ -154,10 +154,10 @@ for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
 
-# ===== Link Single Dynamic Library (.dylib) — 零外部依赖 =====
+# ===== Link Single Dynamic Library (.dylib) 鈥?闆跺閮ㄤ緷璧?=====
 echo ""
 echo "=== Linking libiup.dylib (self-contained) ==="
-# 静态链接 freetype/bz2/png，框架和系统库保持动态
+# 闈欐€侀摼鎺?freetype/bz2/png锛屾鏋跺拰绯荤粺搴撲繚鎸佸姩鎬?
 $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
     $FREETYPE_LIB \
     -framework Cocoa -framework OpenGL \

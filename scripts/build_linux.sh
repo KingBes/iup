@@ -1,7 +1,7 @@
 #!/bin/bash
 # ===================================================================
-#  IUP Linux GTK3 Build — 单 .so + .a + headers
-#  依赖: apt install libgtk-3-dev libfreetype-dev libftgl-dev
+#  IUP Linux GTK3 Build 鈥?鍗?.so + .a + headers
+#  渚濊禆: apt install libgtk-3-dev libfreetype-dev libftgl-dev
 #        zlib1g-dev libglu1-mesa-dev libcairo2-dev
 # ===================================================================
 set -e
@@ -66,7 +66,7 @@ for f in src/gtk/iupgtk_*.c src/iup_datepick.c \
     ALL_OBJ+=" $(compile_c "$f" "gtk/")"
 done
 
-# ===== IUP Modules (排除 Windows 专有文件) =====
+# ===== IUP Modules (鎺掗櫎 Windows 涓撴湁鏂囦欢) =====
 echo "[3/5] IUP Modules"
 for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio; do
     [ -d "$d" ] || continue
@@ -85,7 +85,7 @@ done
 
 # ===== CD Library (Linux/X11 backend) =====
 echo "[4/5] CD + IM Libraries"
-# CD common + X11 (实际存在的文件列表)
+# CD common + X11 (瀹為檯瀛樺湪鐨勬枃浠跺垪琛?
 CD_X11="cd/src/x11/cdx11.c cd/src/x11/cdxclp.c cd/src/x11/cdxdbuf.c cd/src/x11/cdximg.c cd/src/x11/cdxnative.c cd/src/x11/xvertex.c"
 for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c $CD_X11; do
@@ -97,7 +97,7 @@ for f in cd/src/cdpp.cpp; do
     [ -f "$f" ] && ALL_OBJ+=" $(compile_cxx "$f" "cd/")"
 done
 
-# IM core (portable — 排除 Win32 专属文件)
+# IM core (portable 鈥?鎺掗櫎 Win32 涓撳睘鏂囦欢)
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
     [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* ]] && continue
@@ -119,7 +119,7 @@ for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
     done
 done
 
-# ===== Scintilla (排除 win32 平台层) =====
+# ===== Scintilla (鎺掗櫎 win32 骞冲彴灞? =====
 echo "[5/5] Scintilla"
 SCIBASE="srcscintilla/scintilla3112"
 for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; do
@@ -133,11 +133,11 @@ for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
 
-# ===== Link Single Shared Library (.so) — 零外部依赖 =====
+# ===== Link Single Shared Library (.so) 鈥?闆跺閮ㄤ緷璧?=====
 echo ""
 echo "=== Linking libiup.so (self-contained) ==="
 GTK_LIBS=$(pkg-config --libs gtk+-3.0 2>/dev/null || echo "")
-# 静态链接 freetype/z/GLU（ftgl 保留动态，部分发行版无 .a）
+# 闈欐€侀摼鎺?freetype/z/GLU锛坒tgl 淇濈暀鍔ㄦ€侊紝閮ㄥ垎鍙戣鐗堟棤 .a锛?
 $CXX -shared -o "$OUT/libiup.so" $ALL_OBJ \
     -Wl,-Bstatic -lfreetype -lz -lGLU \
     -Wl,-Bdynamic -lftgl \
