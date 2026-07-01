@@ -103,7 +103,7 @@ $Defines = @(
     "_WIN32", "WIN32", "DISABLE_D2D", "NO_CXX11_REGEX",
     "IUP_IMGLIB_LARGE_ICON", "OSC_HOST_LITTLE_ENDIAN",
     "SCINTILLA_VERSION=`"3.11.2`"", "_USE_MATH_DEFINES",
-    "UNICODE", "_UNICODE", "_MBCS",
+    "_MBCS",
     "NDEBUG"
 )
 
@@ -126,9 +126,12 @@ function Compile-C($src) {
     $srcFull = "$Root\$src"
     if (Test-Path $srcFull) {
         Write-Host "  [CC] $src" -ForegroundColor Gray
-        cmd /c "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`" 2>&1" | Out-Null
+        # 写响应文件避免 cmd /c 命令行长度限制
+        $rspFile = "$ObjDir\compile.rsp"
+        "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`"" | Out-File -FilePath $rspFile -Encoding ascii
+        $output = cmd /c "@$rspFile" 2>&1
         if ($LASTEXITCODE -ne 0) {
-            cmd /c "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`""
+            Write-Host $output -ForegroundColor Red
             throw "Compilation failed: $src"
         }
         $script:TotalCompiled++
@@ -142,9 +145,11 @@ function Compile-Cxx($src) {
     $srcFull = "$Root\$src"
     if (Test-Path $srcFull) {
         Write-Host "  [CXX] $src" -ForegroundColor Gray
-        cmd /c "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`" 2>&1" | Out-Null
+        $rspFile = "$ObjDir\compile.rsp"
+        "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`"" | Out-File -FilePath $rspFile -Encoding ascii
+        $output = cmd /c "@$rspFile" 2>&1
         if ($LASTEXITCODE -ne 0) {
-            cmd /c "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`""
+            Write-Host $output -ForegroundColor Red
             throw "Compilation failed: $src"
         }
         $script:TotalCompiled++
