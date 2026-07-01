@@ -70,7 +70,7 @@ done
 echo "[3/5] IUP Modules"
 for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio; do
     [ -d "$d" ] || continue
-    for f in $(find "$d" -maxdepth 3 -name '*.c' -o -name '*.cpp' 2>/dev/null); do
+    for f in $(find "$d" -maxdepth 3 \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
         [[ "$f" == *matrixex/* ]] && continue
         [[ "$f" == *win32* || "$f" == *Win32* ]] && continue
@@ -110,7 +110,7 @@ done
 # IM format libs
 for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
     [ -d "$d" ] || continue
-    for f in $(find "$d" -name '*.c' -o -name '*.cpp' 2>/dev/null); do
+    for f in $(find "$d" \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "imfmt/")"
         else

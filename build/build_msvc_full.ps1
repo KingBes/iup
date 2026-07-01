@@ -661,6 +661,7 @@ Write-Host "  Objects: $($AllObjs.Count)" -ForegroundColor Gray
 Write-Host "  Output:  $DllOut" -ForegroundColor Gray
 
 # Link: 使用 __declspec(dllexport) 自动导出，不需要 .def
+# 用响应文件传入所有 .obj 路径，避免命令行长度限制
 $linkCmd = "link.exe /NOLOGO /DLL /MACHINE:X64 /LTCG /OPT:REF /OPT:ICF /IMPLIB:`"$LibOut`" /OUT:`"$DllOut`" $LinkPaths $LinkLibs @`"$rspFile`""
 Write-Host "  Linking..." -ForegroundColor Gray
 $result = cmd /c $linkCmd 2>&1
