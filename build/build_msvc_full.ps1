@@ -649,7 +649,18 @@ $SysLibs = @(
     "shlwapi.lib", "gdiplus.lib", "winspool.lib",
     "opengl32.lib", "glu32.lib"
 )
-$VcpkgLibs = @("freetype.lib", "zlib.lib")
+
+# 动态检测 vcpkg 库文件名 (x64-windows-static 可能使用不同命名)
+function Find-VcpkgLib($pattern) {
+    $found = Get-ChildItem "$VcpkgInstalled\lib\$pattern" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($found) { return $found.Name }
+    return $null
+}
+$freetypeLib = Find-VcpkgLib "freetype*.lib"
+$zlibLib = Find-VcpkgLib "zlib*.lib"
+$VcpkgLibs = @()
+if ($freetypeLib) { $VcpkgLibs += $freetypeLib } else { Write-Host "WARNING: freetype lib not found" -ForegroundColor Yellow }
+if ($zlibLib) { $VcpkgLibs += $zlibLib } else { Write-Host "WARNING: zlib lib not found" -ForegroundColor Yellow }
 
 $LibPaths = @(
     "/LIBPATH:`"$MsvcPath\lib\x64`"",
