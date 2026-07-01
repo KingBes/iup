@@ -125,7 +125,7 @@ done
 # IM core (portable 鈥?鎺掗櫎 Win32 涓撳睘鏂囦欢)
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
-    [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* || "$f" == *im_capture_dx* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* ]] && continue
+    [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* || "$f" == *im_capture_dx* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* || "$f" == *jas_* ]] && continue
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else
