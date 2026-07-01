@@ -54,10 +54,13 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            gcc g++ make pkg-config \
+            gcc g++ make pkg-config wget unzip \
             libgtk-3-dev libfreetype-dev libftgl-dev \
             zlib1g-dev libglu1-mesa-dev libcairo2-dev \
             libgl1-mesa-dev
+
+      - name: Download CD/IM Sources
+        run: bash scripts/download_deps.sh
 
       - name: Build
         run: |
@@ -91,10 +94,13 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            gcc g++ make pkg-config \
+            gcc g++ make pkg-config wget unzip \
             libgtk-3-dev libfreetype-dev libftgl-dev \
             zlib1g-dev libglu1-mesa-dev libcairo2-dev \
             libgl1-mesa-dev
+
+      - name: Download CD/IM Sources
+        run: bash scripts/download_deps.sh
 
       - name: Build
         run: |
@@ -120,13 +126,16 @@ jobs:
   #  macOS aarch64  (Cocoa)
   # ===================================================================
   macos-aarch64:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies (static)
+      - name: Install dependencies
         run: |
-          brew install freetype
+          brew install freetype wget
+
+      - name: Download CD/IM Sources
+        run: bash scripts/download_deps.sh
 
       - name: Build
         run: |

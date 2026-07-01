@@ -139,7 +139,15 @@ void iupdrvGetFullSize(int *width, int *height)
 
 int iupdrvGetScreenDepth(void)
 {
-	return CGDisplayBitsPerPixel(kCGDirectMainDisplay);  /* Deprecated in Mac OS X v10.6 */
+	NSBitmapImageRep *rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+		pixelsWide:1 pixelsHigh:1
+		bitsPerSample:8 samplesPerPixel:4
+		hasAlpha:YES isPlanar:NO
+		colorSpaceName:NSCalibratedRGBColorSpace
+		bytesPerRow:0 bitsPerPixel:0];
+	int bpp = (int)[rep bitsPerPixel];
+	[rep release];
+	return bpp > 0 ? bpp : 32;
 }
 
 // I think this is not going to work on Cocoa. Apple does everything in their power to hide this for retina.
