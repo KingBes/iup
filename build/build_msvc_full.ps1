@@ -659,10 +659,16 @@ function Find-VcpkgLib($names) {
     return $null
 }
 $freetypeLib = Find-VcpkgLib @("freetype.lib", "freetyped.lib", "freetype6.lib")
-$zlibLib = Find-VcpkgLib @("zlib.lib", "zlibstatic.lib", "z.lib", "zdll.lib")
+$zlibLib = Find-VcpkgLib @("zs.lib", "zlib.lib", "zlibstatic.lib", "z.lib", "zdll.lib")
+$bz2Lib = Find-VcpkgLib @("bz2.lib", "bz2d.lib")
+$brotliLibs = @()
+$brotliLib = Find-VcpkgLib @("brotlicommon.lib")
+if ($brotliLib) { $brotliLibs += @("brotlicommon.lib", "brotlidec.lib", "brotlienc.lib") }
 $VcpkgLibs = @()
 if ($freetypeLib) { $VcpkgLibs += $freetypeLib } else { Write-Host "WARNING: freetype lib not found in $VcpkgInstalled\lib" -ForegroundColor Yellow }
 if ($zlibLib) { $VcpkgLibs += $zlibLib } else { Write-Host "WARNING: zlib lib not found in $VcpkgInstalled\lib" -ForegroundColor Yellow }
+if ($bz2Lib) { $VcpkgLibs += $bz2Lib }
+$VcpkgLibs += $brotliLibs
 
 $LibPaths = @(
     "/LIBPATH:`"$MsvcPath\lib\x64`"",

@@ -74,8 +74,8 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
     for f in $(find "$d" -maxdepth 3 \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
         [[ "$f" == *matrixex/* ]] && continue
-        [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *_win32* ]] && continue
-        [[ "$f" == *gtk* || "$f" == *cocoa* ]] && continue
+        [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *_win32* || "$f" == *_win.c || "$f" == *_win.cpp ]] && continue
+        [[ "$f" == *gtk* || "$f" == *cocoa* || "$f" == *haiku* ]] && continue
         [[ "$f" == *dx* || "$f" == *DX* || "$f" == *avi* || "$f" == *wmv* || "$f" == *jp2* || "$f" == *ecw* ]] && continue
         [[ "$f" == *jas_* ]] && continue
         if [[ "$f" == *.cpp ]]; then
