@@ -83,8 +83,8 @@ done
 
 # ===== CD Library (Linux/X11 backend) =====
 echo "[4/5] CD + IM Libraries"
-# CD common + X11
-CD_X11="cd/src/x11/cdx11.c cd/src/x11/cdwinx11.c cd/src/x11/cdctx11.c cd/src/x11/cdprnx11.c"
+# CD common + X11 (实际存在的文件列表)
+CD_X11="cd/src/x11/cdx11.c cd/src/x11/cdxclp.c cd/src/x11/cdxdbuf.c cd/src/x11/cdximg.c cd/src/x11/cdxnative.c cd/src/x11/xvertex.c"
 for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c $CD_X11; do
     [ -f "$f" ] || continue
@@ -129,12 +129,15 @@ for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
 
-# ===== Link Shared Library (.so) =====
+# ===== Link Single Shared Library (.so) — 零外部依赖 =====
 echo ""
-echo "=== Linking libiup.so ==="
+echo "=== Linking libiup.so (self-contained) ==="
 GTK_LIBS=$(pkg-config --libs gtk+-3.0 2>/dev/null || echo "")
+# 静态链接 freetype/z/GLU（ftgl 保留动态，部分发行版无 .a）
 $CXX -shared -o "$OUT/libiup.so" $ALL_OBJ \
-    $GTK_LIBS -lfreetype -lftgl -lz -lGL -lGLU -lX11 -lXrender -lm -lpthread -ldl
+    -Wl,-Bstatic -lfreetype -lz -lGLU \
+    -Wl,-Bdynamic -lftgl \
+    $GTK_LIBS -lGL -lX11 -lXrender -lm -lpthread -ldl
 
 # ===== Static Library (.a) =====
 echo "=== Creating libiup.a ==="

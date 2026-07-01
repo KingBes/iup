@@ -2,11 +2,16 @@
 build/obj/
 build/obj_linux/
 build/obj_macos/
+build/obj_msvc/
 build/*.o
+build/*.obj
 build/*.dll
 build/*.exe
 build/*.a
+build/*.lib
+build/*.exp
 build/*.def
+build/*.rsp
 build/test_out.txt
 build/test_img.txt
 build/link_static.sh

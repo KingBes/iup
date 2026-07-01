@@ -1,7 +1,7 @@
 #!/bin/bash
 # ===================================================================
-#  IUP macOS Cocoa Build — 单 .dylib + .a + headers
-#  依赖: Xcode Command Line Tools (clang, frameworks)
+#  IUP macOS Cocoa Build — 单 .dylib + .a + headers (零外部依赖)
+#  依赖: Xcode CLT + Homebrew freetype (静态链接)
 # ===================================================================
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,13 +15,33 @@ mkdir -p "$BUILD" "$OUT"
 CC=clang
 CXX=clang++
 
+# Finder Homebrew (Apple Silicon: /opt/homebrew, Intel: /usr/local)
+if [ -d "/opt/homebrew" ]; then
+    HOMEBREW_PREFIX="/opt/homebrew"
+elif [ -d "/usr/local/Homebrew" ]; then
+    HOMEBREW_PREFIX="/usr/local"
+else
+    HOMEBREW_PREFIX=""
+fi
+
+# 如果有 Homebrew freetype（只用动态 .dylib，Homebrew bottles 不含 .a）
+FREETYPE_INC=""
+FREETYPE_LIB=""
+if [ -n "$HOMEBREW_PREFIX" ] && [ -f "$HOMEBREW_PREFIX/include/ft2build.h" ]; then
+    FREETYPE_INC="-I$HOMEBREW_PREFIX/include/freetype2 -I$HOMEBREW_PREFIX/include"
+    FREETYPE_LIB="-L$HOMEBREW_PREFIX/lib -lfreetype"
+    echo "Freetype: $HOMEBREW_PREFIX"
+else
+    echo "WARNING: freetype not found, building without CD SIM font support"
+fi
+
 # ===== Common flags =====
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces"
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-misleading-indentation"
 OBJCFLAGS="-fobjc-arc -fPIC -Wall -O2"
 
-INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Isrcmglplot -Icd/include -Icd/src -Iim/include -Iim/src"
+INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Isrcmglplot -Icd/include -Icd/src -Iim/include -Iim/src $FREETYPE_INC"
 
 echo "=== macOS Cocoa Build ==="
 echo "Jobs: $JOBS"
@@ -129,11 +149,13 @@ for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
 
-# ===== Link =====
+# ===== Link Single Dynamic Library (.dylib) — 零外部依赖 =====
 echo ""
-echo "=== Linking libiup.dylib ==="
+echo "=== Linking libiup.dylib (self-contained) ==="
+# 静态链接 freetype/bz2/png，框架和系统库保持动态
 $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
-    -framework Cocoa -framework OpenGL -framework Carbon \
+    $FREETYPE_LIB \
+    -framework Cocoa -framework OpenGL \
     -lz -lm -lpthread
 
 echo "=== Creating libiup.a ==="

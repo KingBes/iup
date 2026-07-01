@@ -11,46 +11,28 @@ permissions:
 
 jobs:
   # ===================================================================
-  #  Windows x86_64  (MSYS2 MinGW64)
+  #  Windows x86_64  (MSVC 2022)
   # ===================================================================
   windows-x86_64:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-freetype
-            mingw-w64-x86_64-ftgl
-            mingw-w64-x86_64-zlib
-            mingw-w64-x86_64-make
-            mingw-w64-x86_64-bzip2
-            mingw-w64-x86_64-libpng
-            mingw-w64-x86_64-harfbuzz
-            mingw-w64-x86_64-graphite2
-            mingw-w64-x86_64-glib2
-            mingw-w64-x86_64-pcre2
-            mingw-w64-x86_64-gettext
-            mingw-w64-x86_64-libiconv
-            mingw-w64-x86_64-brotli
-
-      - name: Build DLL + Import Library
-        shell: msys2 {0}
+      - name: Install vcpkg dependencies
         run: |
-          cd $GITHUB_WORKSPACE
-          echo "=== Building IUP Windows x86_64 ==="
-          mingw32-make -f build/Makefile_full.mak -j$(nproc)
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install freetype zlib --triplet x64-windows-static
+
+      - name: Build DLL + Import Library (MSVC)
+        run: |
+          Write-Host "=== Building IUP Windows x86_64 (MSVC) ===" -ForegroundColor Cyan
+          .\build\build_msvc_full.ps1
 
       - name: Package
-        shell: pwsh
         run: |
           $out = "build/windows-x86_64"
           New-Item -ItemType Directory -Force $out | Out-Null
           Copy-Item build/iup.dll $out/
-          Copy-Item build/iup.a   $out/
+          Copy-Item build/iup.lib $out/
           Copy-Item -Recurse include $out/
           Compress-Archive -Path $out/* -DestinationPath iup-windows-x86_64.zip
 
@@ -141,6 +123,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install dependencies (static)
+        run: |
+          brew install freetype
 
       - name: Build
         run: |
