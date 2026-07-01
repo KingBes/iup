@@ -18,7 +18,7 @@ CXX=clang++
 # ===== Common flags =====
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces"
-CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-class-memaccess -Wno-reorder -Wno-write-strings"
+CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-misleading-indentation"
 OBJCFLAGS="-fobjc-arc -fPIC -Wall -O2"
 
 INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Isrcmglplot -Icd/include -Icd/src -Iim/include -Iim/src"

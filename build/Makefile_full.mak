@@ -31,7 +31,8 @@ CFLAGS   = -fpermissive -Wall -O2 -m64 -pipe $(DEFINES) \
 CXXFLAGS = -Wall -O2 -m64 -pipe -std=c++11 $(DEFINES) \
            -Wno-int-to-pointer-cast -Wno-unused-function \
            -Wno-missing-braces -Wno-class-memaccess -Wno-reorder \
-           -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas
+           -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas \
+           -Wno-misleading-indentation
 LDFLAGS  = -shared -static-libgcc -static-libstdc++ -m64 \
            -Wl,--export-all-symbols,--out-implib=$(OUTPUT).a
 
