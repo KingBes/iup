@@ -68,7 +68,7 @@ $IncludeFlags = @(
     "/I`"$Root\src`"", "/I`"$Root\src\win`"", "/I`"$Root\src\win\wdl`"",
     "/I`"$Root\srcimglib`"",
     "/I`"$Root\srcgl`"", "/I`"$Root\srcglcontrols`"",
-    "/I`"$Root\srcmglplot`"", "/I`"$Root\srcmglplot\src`"",
+    "/I`"$Root\srcmglplot\src`"",
     "/I`"$Root\srctuio`"", "/I`"$Root\srctuio\tuio`"", "/I`"$Root\srctuio\oscpack`"",
     "/I`"$Root\srcscintilla`"",
     "/I`"$Root\srcscintilla\scintilla3112\include`"",

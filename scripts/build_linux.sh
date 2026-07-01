@@ -18,13 +18,13 @@ CXX=g++
 
 # ===== Common flags =====
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DNO_CXX11_REGEX"
-CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-missing-braces"
-CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -fpermissive -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas -Wno-misleading-indentation"
+CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-missing-braces -Wno-error=deprecated-declarations"
+CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -fpermissive -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 
 GTK_CFLAGS=$(pkg-config --cflags gtk+-3.0 2>/dev/null || echo "")
 FREETYPE_CFLAGS=$(pkg-config --cflags freetype2 2>/dev/null || echo "")
 
-INCLUDES="-Iinclude -Isrc -Isrc/gtk -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Isrcmglplot -Icd/include -Icd/src -Iim/include -Iim/src $GTK_CFLAGS $FREETYPE_CFLAGS"
+INCLUDES="-Iinclude -Isrc -Isrc/gtk -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Iim/include -Iim/src $GTK_CFLAGS $FREETYPE_CFLAGS"
 
 echo "=== Linux GTK3 Build ==="
 echo "Jobs: $JOBS"
