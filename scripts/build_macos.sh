@@ -51,10 +51,7 @@ compile_c() {
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
     echo "  [CC] $src" >&2
-    if ! $CC -c $CFLAGS $DEFS $INCLUDES -o "$obj" "$src" 2>&1; then
-        echo "  FAILED: $src" >&2
-        return 1
-    fi
+    $CC -c $CFLAGS $DEFS $INCLUDES -o "$obj" "$src" || { echo "  FAILED: $src" >&2; return 1; }
     echo "$obj"
 }
 
@@ -63,10 +60,7 @@ compile_m() {
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
     echo "  [M]  $src" >&2
-    if ! $CC -c $OBJCFLAGS $DEFS $INCLUDES -o "$obj" "$src" 2>&1; then
-        echo "  FAILED: $src" >&2
-        return 1
-    fi
+    $CC -c $OBJCFLAGS $DEFS $INCLUDES -o "$obj" "$src" || { echo "  FAILED: $src" >&2; return 1; }
     echo "$obj"
 }
 
@@ -75,10 +69,7 @@ compile_cxx() {
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
     echo "  [CXX] $src" >&2
-    if ! $CXX -c $CXXFLAGS $DEFS $INCLUDES -o "$obj" "$src" 2>&1; then
-        echo "  FAILED: $src" >&2
-        return 1
-    fi
+    $CXX -c $CXXFLAGS $DEFS $INCLUDES -o "$obj" "$src" || { echo "  FAILED: $src" >&2; return 1; }
     echo "$obj"
 }
 

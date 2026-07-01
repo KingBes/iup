@@ -126,12 +126,9 @@ function Compile-C($src) {
     $srcFull = "$Root\$src"
     if (Test-Path $srcFull) {
         Write-Host "  [CC] $src" -ForegroundColor Gray
-        # 写响应文件避免 cmd /c 命令行长度限制
-        $rspFile = "$ObjDir\compile.rsp"
-        "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`"" | Out-File -FilePath $rspFile -Encoding ascii
-        $output = cmd /c "@$rspFile" 2>&1
+        $output = cmd /c "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`" 2>&1"
         if ($LASTEXITCODE -ne 0) {
-            Write-Host $output -ForegroundColor Red
+            Write-Host ($output -join "`n") -ForegroundColor Red
             throw "Compilation failed: $src"
         }
         $script:TotalCompiled++
@@ -145,11 +142,9 @@ function Compile-Cxx($src) {
     $srcFull = "$Root\$src"
     if (Test-Path $srcFull) {
         Write-Host "  [CXX] $src" -ForegroundColor Gray
-        $rspFile = "$ObjDir\compile.rsp"
-        "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`"" | Out-File -FilePath $rspFile -Encoding ascii
-        $output = cmd /c "@$rspFile" 2>&1
+        $output = cmd /c "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`" 2>&1"
         if ($LASTEXITCODE -ne 0) {
-            Write-Host $output -ForegroundColor Red
+            Write-Host ($output -join "`n") -ForegroundColor Red
             throw "Compilation failed: $src"
         }
         $script:TotalCompiled++
@@ -651,16 +646,23 @@ $SysLibs = @(
 )
 
 # 动态检测 vcpkg 库文件名 (x64-windows-static 可能使用不同命名)
-function Find-VcpkgLib($pattern) {
-    $found = Get-ChildItem "$VcpkgInstalled\lib\$pattern" -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($found) { return $found.Name }
+function Find-VcpkgLib($names) {
+    foreach ($name in $names) {
+        $found = Get-ChildItem "$VcpkgInstalled\lib\$name" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($found) { return $found.Name }
+    }
+    # 搜索所有 .lib 文件
+    $all = Get-ChildItem "$VcpkgInstalled\lib\*.lib" -ErrorAction SilentlyContinue
+    if ($all) {
+        Write-Host "  vcpkg libs found: $($all.Name -join ', ')" -ForegroundColor Gray
+    }
     return $null
 }
-$freetypeLib = Find-VcpkgLib "freetype*.lib"
-$zlibLib = Find-VcpkgLib "zlib*.lib"
+$freetypeLib = Find-VcpkgLib @("freetype.lib", "freetyped.lib", "freetype6.lib")
+$zlibLib = Find-VcpkgLib @("zlib.lib", "zlibstatic.lib", "z.lib", "zdll.lib")
 $VcpkgLibs = @()
-if ($freetypeLib) { $VcpkgLibs += $freetypeLib } else { Write-Host "WARNING: freetype lib not found" -ForegroundColor Yellow }
-if ($zlibLib) { $VcpkgLibs += $zlibLib } else { Write-Host "WARNING: zlib lib not found" -ForegroundColor Yellow }
+if ($freetypeLib) { $VcpkgLibs += $freetypeLib } else { Write-Host "WARNING: freetype lib not found in $VcpkgInstalled\lib" -ForegroundColor Yellow }
+if ($zlibLib) { $VcpkgLibs += $zlibLib } else { Write-Host "WARNING: zlib lib not found in $VcpkgInstalled\lib" -ForegroundColor Yellow }
 
 $LibPaths = @(
     "/LIBPATH:`"$MsvcPath\lib\x64`"",
