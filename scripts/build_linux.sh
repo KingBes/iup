@@ -72,8 +72,9 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
     [ -d "$d" ] || continue
     for f in $(find "$d" -maxdepth 3 -name '*.c' -o -name '*.cpp' 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
-        [[ "$f" == *matrixex/* ]] && continue  # matrixex is complex C
+        [[ "$f" == *matrixex/* ]] && continue
         [[ "$f" == *win32* || "$f" == *Win32* ]] && continue
+        [[ "$f" == *gtk* || "$f" == *cocoa* ]] && continue
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "mod/")"
         else
@@ -121,7 +122,8 @@ done
 # ===== Scintilla (排除 win32 平台层) =====
 echo "[5/5] Scintilla"
 SCIBASE="srcscintilla/scintilla3112"
-for f in $(find "$SCIBASE/src" "$SCIBASE/lexlib" "$SCIBASE/lexers" -name '*.cxx' 2>/dev/null); do
+for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; do
+    [ -f "$f" ] || continue
     [[ "$f" == *LexLPeg* ]] && continue
     ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
 done
