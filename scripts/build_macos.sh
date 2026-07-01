@@ -93,12 +93,13 @@ for f in src/cocoa/*.m src/cocoa/*.c; do
     fi
 done
 
-# ===== IUP Modules =====
+# ===== IUP Modules (排除 Windows 专有文件) =====
 echo "[3/5] IUP Modules"
-for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio srcole; do
+for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio; do
     [ -d "$d" ] || continue
     for f in $(find "$d" -maxdepth 3 -name '*.c' -o -name '*.cpp' 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
+        [[ "$f" == *win32* || "$f" == *Win32* ]] && continue
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "mod/")"
         else
@@ -109,16 +110,18 @@ done
 
 # ===== CD + IM =====
 echo "[4/5] CD + IM Libraries"
-# CD — use Quartz or portable backends (skip win32, gdiplus, X11)
+# CD — 使用便携后端 (跳过 win32/gdiplus/X11, 以及需要 FTGL 的 cdgl)
 for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c; do
     [ -f "$f" ] || continue
+    [[ "$f" == *cdgl.c ]] && continue  # 需要 FTGL，macOS 不提供
     ALL_OBJ+=" $(compile_c "$f" "cd/")"
 done
 
-# IM core
+# IM core (portable — 排除 Win32 专属文件)
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
+    [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* ]] && continue
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else
@@ -137,10 +140,10 @@ for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
     done
 done
 
-# ===== Scintilla =====
+# ===== Scintilla (排除 win32 平台层) =====
 echo "[5/5] Scintilla"
 SCIBASE="srcscintilla/scintilla3112"
-for f in $(find "$SCIBASE/src" "$SCIBASE/lexlib" "$SCIBASE/lexers" "$SCIBASE/win32" -name '*.cxx' 2>/dev/null); do
+for f in $(find "$SCIBASE/src" "$SCIBASE/lexlib" "$SCIBASE/lexers" -name '*.cxx' 2>/dev/null); do
     [[ "$f" == *LexLPeg* ]] && continue
     ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
 done

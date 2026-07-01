@@ -60,6 +60,7 @@ $DllOut = "$Root\$OutputDir\iup.dll"
 $LibOut = "$Root\$OutputDir\iup.lib"
 New-Item -ItemType Directory -Force -Path $ObjDir | Out-Null
 
+# 用 + 拼接数组避免嵌套 (ForEach 返回 Collection 需要展开)
 $IncludeFlags = @(
     "/I$Root\include",
     "/I$Root\src", "/I$Root\src\win", "/I$Root\src\win\wdl",
@@ -87,9 +88,8 @@ $IncludeFlags = @(
     "/I$Root\im\src\lz4",
     "/I$VcpkgInstalled\include",
     "/I$VcpkgInstalled\include\freetype2",
-    "/I$MsvcInclude",
-    ($SdkInclude -split ";").ForEach({ "/I$_" })
-)
+    "/I$MsvcInclude"
+) + ($SdkInclude -split ";" | ForEach-Object { "/I$_" })
 
 $Defines = @(
     "IUP_BUILD_LIBRARY", "IUP_DLL",
@@ -115,7 +115,7 @@ $CFlags = "/nologo /c /MT /O2 /utf-8 /GL $WarnSuppress $DefineStr $IncludeStr"
 $CxxFlags = "/nologo /c /MT /O2 /utf-8 /EHsc /std:c++14 /GL $WarnSuppress /Zc:__cplusplus $DefineStr $IncludeStr"
 
 # ===================================================================
-# 4. 编译辅助函数
+# 4. 编译辅助函数 (cmd /c 确保参数正确拆分)
 # ===================================================================
 $script:TotalCompiled = 0
 
@@ -124,9 +124,9 @@ function Compile-C($src) {
     $srcFull = "$Root\$src"
     if (Test-Path $srcFull) {
         Write-Host "  [CC] $src" -ForegroundColor Gray
-        & cl.exe $CFlags "/Fo$obj" $srcFull 2>&1 | Out-Null
+        cmd /c "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`" 2>&1" | Out-Null
         if ($LASTEXITCODE -ne 0) {
-            & cl.exe $CFlags "/Fo$obj" $srcFull
+            cmd /c "cl.exe $CFlags /Fo`"$obj`" `"$srcFull`""
             throw "Compilation failed: $src"
         }
         $script:TotalCompiled++
@@ -140,9 +140,9 @@ function Compile-Cxx($src) {
     $srcFull = "$Root\$src"
     if (Test-Path $srcFull) {
         Write-Host "  [CXX] $src" -ForegroundColor Gray
-        & cl.exe $CxxFlags "/Fo$obj" $srcFull 2>&1 | Out-Null
+        cmd /c "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`" 2>&1" | Out-Null
         if ($LASTEXITCODE -ne 0) {
-            & cl.exe $CxxFlags "/Fo$obj" $srcFull
+            cmd /c "cl.exe $CxxFlags /Fo`"$obj`" `"$srcFull`""
             throw "Compilation failed: $src"
         }
         $script:TotalCompiled++

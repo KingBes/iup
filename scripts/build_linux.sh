@@ -60,19 +60,20 @@ done
 
 # ===== IUP GTK Backend =====
 echo "[2/5] IUP GTK Driver"
-for f in src/gtk/iupgtk_*.c src/gtk/iupmac_help.c src/gtk/iupmac_info.c src/iup_datepick.c \
+for f in src/gtk/iupgtk_*.c src/iup_datepick.c \
          src/mot/iupunix_info.c; do
     [ -f "$f" ] || continue
     ALL_OBJ+=" $(compile_c "$f" "gtk/")"
 done
 
-# ===== IUP Modules (same source, platform-independent) =====
+# ===== IUP Modules (排除 Windows 专有文件) =====
 echo "[3/5] IUP Modules"
-for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio srcole; do
+for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio; do
     [ -d "$d" ] || continue
     for f in $(find "$d" -maxdepth 3 -name '*.c' -o -name '*.cpp' 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
         [[ "$f" == *matrixex/* ]] && continue  # matrixex is complex C
+        [[ "$f" == *win32* || "$f" == *Win32* ]] && continue
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "mod/")"
         else
@@ -95,9 +96,10 @@ for f in cd/src/cdpp.cpp; do
     [ -f "$f" ] && ALL_OBJ+=" $(compile_cxx "$f" "cd/")"
 done
 
-# IM core (portable)
+# IM core (portable — 排除 Win32 专属文件)
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
+    [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* ]] && continue
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else
@@ -116,10 +118,10 @@ for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
     done
 done
 
-# ===== Scintilla (shared source with Windows) =====
+# ===== Scintilla (排除 win32 平台层) =====
 echo "[5/5] Scintilla"
 SCIBASE="srcscintilla/scintilla3112"
-for f in $(find "$SCIBASE/src" "$SCIBASE/lexlib" "$SCIBASE/lexers" "$SCIBASE/win32" -name '*.cxx' 2>/dev/null); do
+for f in $(find "$SCIBASE/src" "$SCIBASE/lexlib" "$SCIBASE/lexers" -name '*.cxx' 2>/dev/null); do
     [[ "$f" == *LexLPeg* ]] && continue
     ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
 done
