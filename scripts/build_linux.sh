@@ -35,7 +35,10 @@ compile_c() {
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
     echo "  [CC] $src" >&2
-    $CC -c $CFLAGS $DEFS $INCLUDES -o "$obj" "$src"
+    if ! $CC -c $CFLAGS $DEFS $INCLUDES -o "$obj" "$src" 2>&1; then
+        echo "  FAILED: $src" >&2
+        return 1
+    fi
     echo "$obj"
 }
 
@@ -44,7 +47,10 @@ compile_cxx() {
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
     echo "  [CXX] $src" >&2
-    $CXX -c $CXXFLAGS $DEFS $INCLUDES -o "$obj" "$src"
+    if ! $CXX -c $CXXFLAGS $DEFS $INCLUDES -o "$obj" "$src" 2>&1; then
+        echo "  FAILED: $src" >&2
+        return 1
+    fi
     echo "$obj"
 }
 
@@ -73,8 +79,10 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
     for f in $(find "$d" -maxdepth 3 \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
         [[ "$f" == *matrixex/* ]] && continue
-        [[ "$f" == *win32* || "$f" == *Win32* ]] && continue
+        [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *_win32* ]] && continue
         [[ "$f" == *gtk* || "$f" == *cocoa* ]] && continue
+        [[ "$f" == *dx* || "$f" == *DX* || "$f" == *avi* || "$f" == *wmv* || "$f" == *jp2* || "$f" == *ecw* ]] && continue
+        [[ "$f" == *jas_* ]] && continue
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "mod/")"
         else
@@ -90,6 +98,7 @@ CD_X11="cd/src/x11/cdx11.c cd/src/x11/cdxclp.c cd/src/x11/cdxdbuf.c cd/src/x11/c
 for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c $CD_X11; do
     [ -f "$f" ] || continue
+    [[ "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* || "$f" == *cdgl* || "$f" == *cgm* ]] && continue
     ALL_OBJ+=" $(compile_c "$f" "cd/")"
 done
 # CD C++ files
@@ -100,17 +109,19 @@ done
 # IM core (portable 鈥?鎺掗櫎 Win32 涓撳睘鏂囦欢)
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
-    [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* ]] && continue
+    [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* || "$f" == *im_capture_dx* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* ]] && continue
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else
         ALL_OBJ+=" $(compile_c "$f" "im/")"
     fi
 done
-# IM format libs
+# IM format libs (排除 Win32 专属)
 for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
     [ -d "$d" ] || continue
     for f in $(find "$d" \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
+        [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *tif_win32* ]] && continue
+        [[ "$f" == *jas_* || "$f" == *im_capture* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* ]] && continue
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "imfmt/")"
         else
@@ -125,6 +136,7 @@ SCIBASE="srcscintilla/scintilla3112"
 for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; do
     [ -f "$f" ] || continue
     [[ "$f" == *LexLPeg* ]] && continue
+    [[ "$f" == *ExternalLexer* ]] && continue
     ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
 done
 # IUP Scintilla wrapper
