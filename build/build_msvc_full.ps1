@@ -64,6 +64,7 @@ New-Item -ItemType Directory -Force -Path $ObjDir | Out-Null
 # 路径用引号包裹，避免含空格的路径被 cmd /c 拆分
 $IncludeFlags = @(
     "/I`"$Root\include`"",
+    "/I`"$Root\build`"",
     "/I`"$Root\src`"", "/I`"$Root\src\win`"", "/I`"$Root\src\win\wdl`"",
     "/I`"$Root\srcimglib`"",
     "/I`"$Root\srcgl`"", "/I`"$Root\srcglcontrols`"",
