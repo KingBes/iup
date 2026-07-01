@@ -63,6 +63,7 @@ echo "[2/5] IUP GTK Driver"
 for f in src/gtk/iupgtk_*.c src/iup_datepick.c \
          src/mot/iupunix_info.c; do
     [ -f "$f" ] || continue
+    [[ "$f" == *iupgtk_draw_gdk.c ]] && continue  # GTK2 API, not compatible with GTK3
     ALL_OBJ+=" $(compile_c "$f" "gtk/")"
 done
 
