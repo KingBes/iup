@@ -126,7 +126,7 @@ jobs:
   #  macOS aarch64  (Cocoa)
   # ===================================================================
   macos-aarch64:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
