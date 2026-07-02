@@ -180,7 +180,31 @@ fi
 add_pkgpath "$PIXMAN_PREFIX"
 
 # ===================================================================
-# cairo (meson) - depends on pixman, freetype, pango
+# lzo - needed by cairo script interpreter
+# Homebrew's lzo2.pc has a broken include path (appends /lzo to
+# Cflags, causing #include <lzo/lzo2a.h> to fail).  We write a
+# correct override .pc so cairo finds lzo with the right -I path.
+# ===================================================================
+LZO_OVERRIDE_DIR="$DEPS/lzo_override"
+LZO_SYSTEM_PREFIX="$(brew --prefix lzo 2>/dev/null || echo /opt/homebrew/opt/lzo)"
+
+mkdir -p "$LZO_OVERRIDE_DIR/lib/pkgconfig"
+cat > "$LZO_OVERRIDE_DIR/lib/pkgconfig/lzo2.pc" << LZOEOF
+prefix=${LZO_SYSTEM_PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: lzo2
+Description: LZO real-time data compression library
+Version: 2.10
+Libs: -L\${libdir} -llzo2
+Cflags: -I\${includedir}
+LZOEOF
+add_pkgpath "$LZO_OVERRIDE_DIR"
+
+# ===================================================================
+# cairo (meson) - depends on pixman, freetype, pango, lzo
 # ===================================================================
 CAIRO_VER="1.18.2"
 CAIRO_PREFIX="$DEPS/cairo"
@@ -191,10 +215,6 @@ if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
     wget -q "https://www.cairographics.org/releases/cairo-${CAIRO_VER}.tar.xz"
     tar xJf "cairo-${CAIRO_VER}.tar.xz"; rm -f "cairo-${CAIRO_VER}.tar.xz"
     cd "cairo-${CAIRO_VER}"
-    # Fix lzo include path: Homebrew's lzo pkg-config returns -I.../lzo
-    # but cairo-script-file.c does #include <lzo/lzo2a.h>, needs parent dir
-    LZO_PREFIX="$(brew --prefix lzo 2>/dev/null || echo /opt/homebrew/opt/lzo)"
-    LZO_CFLAGS="-I${LZO_PREFIX}/include" LZO_LIBS="-L${LZO_PREFIX}/lib -llzo2" \
     meson setup _build --prefix="$CAIRO_PREFIX" --default-library=static \
         -Dtests=disabled \
         -Dquartz=enabled \
