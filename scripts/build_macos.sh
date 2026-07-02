@@ -80,7 +80,7 @@ if [ ! -f "$GLIB_PREFIX/lib/libglib-2.0.a" ]; then
         -Dtests=false -Dnls=disabled -Doss_fuzz=disabled \
         -Dlibmount=disabled -Ddtrace=false -Dsystemtap=false \
         -Dsysprof=disabled \
-        -Dman=false -Ddocumentation=false
+        -Dman=false -Dgtk_doc=false -Dinstalled-tests=false
     ninja -C _build -j"$JOBS"
     ninja -C _build install
     cd "$ROOT"
