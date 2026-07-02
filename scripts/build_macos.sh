@@ -72,17 +72,11 @@ FTGL_PREFIX="$DEPS/ftgl"
 if [ ! -f "$FTGL_PREFIX/lib/libftgl.a" ]; then
     echo "=== Building FTGL $FTGL_VER ==="
     cd "$DEPS"
-    # Try multiple sources for reliability
-    wget -q --show-progress -O "ftgl-${FTGL_VER}.tar.gz" \
-        "https://github.com/ulrichard/ftgl/archive/refs/tags/${FTGL_VER}.tar.gz" 2>/dev/null || \
-    wget -q --show-progress -O "ftgl-${FTGL_VER}.tar.gz" \
-        "https://github.com/ulrichard/ftgl/archive/refs/tags/v${FTGL_VER}.tar.gz" 2>/dev/null || \
-    wget -q --show-progress -O "ftgl-${FTGL_VER}.tar.gz" \
-        "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz/download" 2>/dev/null || \
-    { echo "ERROR: Failed to download FTGL ${FTGL_VER}" >&2; exit 1; }
+    curl -L -o "ftgl-${FTGL_VER}.tar.gz" \
+        "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz/download" \
+        || { echo "ERROR: Failed to download FTGL ${FTGL_VER}" >&2; exit 1; }
     tar xzf "ftgl-${FTGL_VER}.tar.gz"; rm -f "ftgl-${FTGL_VER}.tar.gz"
-    FTGL_DIR=$(ls -d ftgl-* 2>/dev/null | head -1)
-    cd "$FTGL_DIR"
+    cd "ftgl-${FTGL_VER}"
     FREETYPE_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include" \
     FREETYPE_LIBS="-L$FREETYPE_PREFIX/lib -lfreetype" \
     ./configure --prefix="$FTGL_PREFIX" --with-pic --enable-static --disable-shared --without-x
