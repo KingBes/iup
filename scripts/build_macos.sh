@@ -69,7 +69,7 @@ add_pkgpath "$FREETYPE_PREFIX"
 # ===================================================================
 if ! python3 -c "import distutils" 2>/dev/null; then
     echo "=== Installing setuptools (distutils shim) ==="
-    pip3 install setuptools
+    pip3 install --break-system-packages setuptools
 fi
 
 # ===================================================================
