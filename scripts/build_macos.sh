@@ -171,6 +171,7 @@ if [ ! -f "$PIXMAN_PREFIX/lib/libpixman-1.a" ]; then
     wget -q "https://www.cairographics.org/releases/pixman-${PIXMAN_VER}.tar.gz"
     tar xzf "pixman-${PIXMAN_VER}.tar.gz"; rm -f "pixman-${PIXMAN_VER}.tar.gz"
     cd "pixman-${PIXMAN_VER}"
+    autoreconf -fi
     ./configure --prefix="$PIXMAN_PREFIX" --enable-static --disable-shared \
         --disable-gtk --disable-libpng
     make -j"$JOBS"; make install; cd "$ROOT"
