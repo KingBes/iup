@@ -180,7 +180,7 @@ fi
 add_pkgpath "$PIXMAN_PREFIX"
 
 # ===================================================================
-# cairo (autotools) - depends on pixman, freetype, pango
+# cairo (meson) - depends on pixman, freetype, pango
 # ===================================================================
 CAIRO_VER="1.18.2"
 CAIRO_PREFIX="$DEPS/cairo"
@@ -191,12 +191,14 @@ if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
     wget -q "https://www.cairographics.org/releases/cairo-${CAIRO_VER}.tar.xz"
     tar xJf "cairo-${CAIRO_VER}.tar.xz"; rm -f "cairo-${CAIRO_VER}.tar.xz"
     cd "cairo-${CAIRO_VER}"
-    ./configure --prefix="$CAIRO_PREFIX" --enable-static --disable-shared \
-        --enable-quartz --enable-quartz-image \
-        --disable-xlib --disable-xcb --without-x \
-        --disable-pdf --disable-ps --disable-svg --disable-script \
-        --disable-full-testing
-    make -j"$JOBS"; make install; cd "$ROOT"
+    meson setup _build --prefix="$CAIRO_PREFIX" --default-library=static \
+        -Dtests=disabled \
+        -Dquartz=enabled -Dquartz-image=enabled \
+        -Dxlib=disabled -Dxcb=disabled \
+        -Dpdf=disabled -Dps=disabled -Dsvg=disabled -Dscript=disabled
+    ninja -C _build -j"$JOBS"
+    ninja -C _build install
+    cd "$ROOT"
 fi
 add_pkgpath "$CAIRO_PREFIX"
 
