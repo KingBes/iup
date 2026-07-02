@@ -146,8 +146,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install wget
-          pip3 install meson ninja
+          brew install wget meson ninja
 
       - name: Download CD/IM Sources
         run: bash scripts/download_deps.sh
