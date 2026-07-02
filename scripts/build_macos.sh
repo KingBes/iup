@@ -25,7 +25,9 @@ ZLIB_PREFIX="$DEPS/zlib"
 if [ ! -f "$FREETYPE_PREFIX/lib/libfreetype.a" ]; then
     echo "=== Building freetype $FREETYPE_VER ==="
     cd "$DEPS"
-    curl -sL "https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE_VER.tar.xz" | tar xJ
+    wget -q "https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE_VER.tar.xz"
+    tar xJf "freetype-$FREETYPE_VER.tar.xz"
+    rm -f "freetype-$FREETYPE_VER.tar.xz"
     cd "freetype-$FREETYPE_VER"
     ./configure --prefix="$FREETYPE_PREFIX" --with-pic --enable-static --disable-shared --without-harfbuzz --without-brotli --without-png --without-bzip2
     make -j"$JOBS"
@@ -36,7 +38,9 @@ fi
 if [ ! -f "$ZLIB_PREFIX/lib/libz.a" ]; then
     echo "=== Building zlib $ZLIB_VER ==="
     cd "$DEPS"
-    curl -sL "https://zlib.net/zlib-$ZLIB_VER.tar.gz" | tar xz
+    wget -q "https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-$ZLIB_VER.tar.gz"
+    tar xzf "zlib-$ZLIB_VER.tar.gz"
+    rm -f "zlib-$ZLIB_VER.tar.gz"
     cd "zlib-$ZLIB_VER"
     CC="$CC" CFLAGS="-fPIC -O2" ./configure --prefix="$ZLIB_PREFIX" --static
     make -j"$JOBS"
