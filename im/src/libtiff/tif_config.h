@@ -125,7 +125,7 @@
 #define HAVE_SYS_TYPES_H   /* IMLIB */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
+#define HAVE_UNISTD_H
 
 /* Use nonstandard varargs form for the GLU tesselator callback */
 #undef HAVE_VARARGS_GLU_TESSCB
