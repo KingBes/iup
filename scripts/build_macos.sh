@@ -283,7 +283,7 @@ $CC -c -x objective-c $OBJCFLAGS -fobjc-arc $DEFS $INCLUDES \
     -o "$_sci_cocoa_obj" "srcscintilla/iup_scintilla_cocoa.m" \
     || { echo "  FAILED: srcscintilla/iup_scintilla_cocoa.m" >&2; exit 1; }
 ALL_OBJ+=" $_sci_cocoa_obj"
-ALL_OBJ+=" $(compile_c "srcscintilla/iup_scilladlg.c" "sciw/")"
+ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilladlg.c" "sciw/")"
 for f in srcscintilla/iupsci_*.c; do
     [ -f "$f" ] || continue
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
