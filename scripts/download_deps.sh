@@ -34,6 +34,12 @@ else
     echo "IM $IM_VER extracted to im/"
 fi
 
+# Patch tif_config.h: enable HAVE_UNISTD_H for Unix-like systems
+if [ -f "$ROOT/im/src/libtiff/tif_config.h" ]; then
+    sed -i 's/^#undef HAVE_UNISTD_H$/#define HAVE_UNISTD_H/' "$ROOT/im/src/libtiff/tif_config.h"
+    echo "Patched tif_config.h: HAVE_UNISTD_H enabled"
+fi
+
 echo ""
 echo "=== Done ==="
 echo "Now run: mingw32-make -f build/Makefile_full.mak -j4"
