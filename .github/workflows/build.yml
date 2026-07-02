@@ -66,6 +66,14 @@ jobs:
           chmod +x scripts/build_linux.sh
           bash scripts/build_linux.sh
 
+      - name: Check Dependencies
+        run: |
+          echo "=== libiup.so dependencies ==="
+          ldd build/linux/libiup.so
+          echo ""
+          echo "=== Checking for missing deps ==="
+          ldd build/linux/libiup.so | grep "not found" && exit 1 || echo "All dependencies found"
+
       - name: Package
         run: |
           out=build/linux-x86_64
@@ -105,6 +113,14 @@ jobs:
           chmod +x scripts/build_linux.sh
           bash scripts/build_linux.sh
 
+      - name: Check Dependencies
+        run: |
+          echo "=== libiup.so dependencies ==="
+          ldd build/linux/libiup.so
+          echo ""
+          echo "=== Checking for missing deps ==="
+          ldd build/linux/libiup.so | grep "not found" && exit 1 || echo "All dependencies found"
+
       - name: Package
         run: |
           out=build/linux-aarch64
@@ -139,6 +155,11 @@ jobs:
         run: |
           chmod +x scripts/build_macos.sh
           bash scripts/build_macos.sh
+
+      - name: Check Dependencies
+        run: |
+          echo "=== libiup.dylib dependencies ==="
+          otool -L build/macos/libiup.dylib
 
       - name: Package
         run: |
