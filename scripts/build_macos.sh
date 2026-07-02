@@ -382,7 +382,7 @@ echo "[4/7] CD + IM"
 for f in cd/src/*.c cd/src/drv/cd*.c cd/src/drv/pptx.c \
          cd/src/sim/*.c cd/src/svg/*.c cd/src/minizip/*.c; do
     [ -f "$f" ] || continue
-    [[ "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* ]] && continue
+    [[ "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* || "$f" == *cdcgm* ]] && continue
     ALL_OBJ+=" $(compile_c "$f" "cd/")"
 done
 
@@ -487,6 +487,9 @@ echo "=== Linking libiup.dylib (self-contained) ==="
 $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
     $DEPS_LIBS \
     -framework Cocoa -framework OpenGL -framework QuartzCore -framework SystemConfiguration \
+    $(pkg-config --libs libffi 2>/dev/null || echo "-lffi") \
+    $(pkg-config --libs libpcre2-8 2>/dev/null || echo "-lpcre2-8") \
+    $(pkg-config --libs intl 2>/dev/null || echo "-L$(brew --prefix gettext 2>/dev/null || echo /opt/homebrew/opt/gettext)/lib -lintl") \
     -liconv -lm -lpthread
 
 echo "=== Creating libiup.a ==="

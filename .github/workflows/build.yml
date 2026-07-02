@@ -146,7 +146,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install wget meson ninja autoconf automake libtool
+          brew install wget meson ninja autoconf automake libtool libffi pcre2 gettext
           pip3 install --break-system-packages setuptools
 
       - name: Download CD/IM Sources
