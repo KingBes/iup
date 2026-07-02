@@ -56,7 +56,7 @@ DEPS_LIBS="$FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
 if grep -q '^#undef HAVE_UNISTD_H' "$ROOT/im/src/libtiff/tif_config.h" 2>/dev/null; then
     perl -pi -e 's/^#undef HAVE_UNISTD_H$/#define HAVE_UNISTD_H/' "$ROOT/im/src/libtiff/tif_config.h"
 fi
-DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\"3.11.2\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DNO_FONTCONFIG -DUSE_ICONV"
+DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\"3.11.2\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DNO_FONTCONFIG -DUSE_ICONV -DPNG_ARM_NEON_OPT=0"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces -Wno-error=deprecated-declarations"
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 OBJCFLAGS="-fPIC -Wall -O2"
@@ -155,7 +155,7 @@ for f in im/src/*.cpp im/src/*.c; do
     fi
 done
 # IM format libs
-for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/lzf im/src/lz4; do
+for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/liblzf im/src/lz4; do
     [ -d "$d" ] || continue
     for f in $(find "$d" \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
         [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *tif_win32* ]] && continue
@@ -177,7 +177,7 @@ for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; d
     [[ "$f" == *ExternalLexer* ]] && continue
     ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
 done
-for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
+for f in srcscintilla/iup_scintilla.c srcscintilla/iup_scintilla_cocoa.c srcscintilla/iupsci_*.c; do
     [ -f "$f" ] || continue
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
