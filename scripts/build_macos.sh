@@ -271,9 +271,9 @@ SCI_INCLUDES="-I$SCI_SRC/include -I$SCI_SRC/src -I$SCI_SRC/lexlib -I$SCI_SRC/lex
 
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\"$SCINTILLA_VERSION\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DPNG_ARM_NEON_OPT=0 -DNO_FONTCONFIG -DGL_SILENCE_DEPRECATION"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces -Wno-error=deprecated-declarations"
-CXXFLAGS="-fPIC -Wall -O2 -std=c++17 -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
+CXXFLAGS="-fPIC -Wall -O2 -std=c++17 -Dregister= -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 OBJCFLAGS="-fPIC -Wall -O2"
-OBJCXXFLAGS="-fPIC -Wall -O2 -std=c++17 -Wno-error=deprecated-declarations"
+OBJCXXFLAGS="-fPIC -Wall -O2 -std=c++17 -Dregister= -Wno-error=deprecated-declarations"
 
 INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla $SCI_INCLUDES -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/cairo -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 -Ibuild $DEPS_CFLAGS"
 
