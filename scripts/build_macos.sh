@@ -389,11 +389,11 @@ done
 # CD Cairo backend (with Pango, now available!)
 for f in cd/src/cairo/*.c cd/src/cairo/*.m; do
     [ -f "$f" ] || continue
-    [[ "$f" == *cdcaironative_gdk* ]] && continue
-    [[ "$f" == *cdcaironative_win32* ]] && continue
-    [[ "$f" == *cdcaironative_x11* ]] && continue
-    [[ "$f" == *cdcairoprn_gtk* ]] && continue
-    [[ "$f" == *cdcairoprn_win32* ]] && continue
+    [[ "$f" == *win32* || "$f" == *Win32* ]] && continue
+    [[ "$f" == *gtk* ]] && continue
+    [[ "$f" == *x11* || "$f" == *X11* ]] && continue
+    [[ "$f" == *gdk* ]] && continue
+    [[ "$f" == *emf* ]] && continue
     if [[ "$f" == *.m ]]; then
         ALL_OBJ+=" $(compile_m "$f" "cdcairo/")"
     else
