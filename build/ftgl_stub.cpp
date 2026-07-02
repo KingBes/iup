@@ -1,5 +1,6 @@
-/* Stub implementations for FTGL functions not available in MSVC builds */
-#include <FTGL/ftgl.h>
+/* Stub implementations for FTGL functions — no ftgl header dependency */
+struct _FTGLfont;
+typedef struct _FTGLfont FTGLfont;
 
 extern "C" {
 
