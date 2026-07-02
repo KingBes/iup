@@ -64,6 +64,15 @@ fi
 add_pkgpath "$FREETYPE_PREFIX"
 
 # ===================================================================
+# Ensure Python distutils is available (removed in Python 3.12+,
+# needed by glib gdbus-codegen)
+# ===================================================================
+if ! python3 -c "import distutils" 2>/dev/null; then
+    echo "=== Installing setuptools (distutils shim) ==="
+    pip3 install setuptools
+fi
+
+# ===================================================================
 # glib (meson) - needed by harfbuzz, pango
 # ===================================================================
 GLIB_VER="2.78.6"
