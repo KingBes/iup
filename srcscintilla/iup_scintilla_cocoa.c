@@ -5,7 +5,7 @@
  */
 
 #include "iup.h"
-#include "iup_scintilla.h"
+#include "iup_class.h"
 
 void iupdrvScintillaReleaseMethod(Iclass* ic)
 {
