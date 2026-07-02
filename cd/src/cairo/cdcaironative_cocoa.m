@@ -3,8 +3,6 @@
  *
  * Provides cdContextNativeWindow() using Cairo's Quartz backend
  * to render CD content directly to an NSView via CGContext.
- *
- * With Pango available, text rendering is fully supported.
  */
 
 #include <stdlib.h>
@@ -14,95 +12,121 @@
 #include <cairo.h>
 #include <cairo-quartz.h>
 
-#include <cd.h>
-#include <cdnative.h>
+#include "cd.h"
+#include "cd_private.h"
+#include "cdnative.h"
 #include "cdcairoctx.h"
 
-static void cdkillcanvasNATIVEWINDOW(cdCairoCanvas* cd_canvas)
+static cairo_t* cdcairoNativeCreateContext(cdCanvas* canvas, NSView* view)
 {
-  NSView* view = (NSView*)cd_canvas->data;
-  if (view) cd_canvas->data = NULL;
-  (void)view;
+  int w = canvas->w;
+  int h = canvas->h;
+  CGContextRef cgContext;
+
+  if (w <= 0) w = 1;
+  if (h <= 0) h = 1;
+
+  cgContext = (CGContextRef)[[NSGraphicsContext currentContext] CGContext];
+  if (cgContext)
+  {
+    cairo_surface_t* surface = cairo_quartz_surface_create_for_cg_context(cgContext, w, h);
+    if (surface)
+    {
+      cairo_t* cr = cairo_create(surface);
+      cairo_surface_destroy(surface);
+      return cr;
+    }
+  }
+
+  /* Fallback: image surface (won't display on screen) */
+  return cairo_create(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h));
 }
 
-static void cdcreatecanvasNATIVEWINDOW(cdCairoCanvas* cd_canvas, void* data)
+static int cdactivate(cdCtxCanvas *ctxcanvas)
 {
+  cdCanvas* canvas = ctxcanvas->canvas;
+  NSView* view = (NSView*)ctxcanvas->window;
+  int old_w = canvas->w;
+  int old_h = canvas->h;
+
+  if (!view) return CD_ERROR;
+
+  NSRect bounds = [view bounds];
+  canvas->w = (int)bounds.size.width;
+  canvas->h = (int)bounds.size.height;
+  if (canvas->w <= 0) canvas->w = 1;
+  if (canvas->h <= 0) canvas->h = 1;
+
+  canvas->w_mm = ((double)canvas->w) / canvas->xres;
+  canvas->h_mm = ((double)canvas->h) / canvas->yres;
+
+  if (old_w != canvas->w || old_h != canvas->h)
+  {
+    cairo_destroy(ctxcanvas->cr);
+    ctxcanvas->cr = cdcairoNativeCreateContext(canvas, view);
+
+    ctxcanvas->last_source = -1;
+
+    cairo_save(ctxcanvas->cr);
+    cairo_set_operator(ctxcanvas->cr, CAIRO_OPERATOR_OVER);
+
+    canvas->cxForeground(ctxcanvas, canvas->foreground);
+    canvas->cxLineStyle(ctxcanvas, canvas->line_style);
+    canvas->cxLineWidth(ctxcanvas, canvas->line_width);
+    canvas->cxLineCap(ctxcanvas, canvas->line_cap);
+    canvas->cxLineJoin(ctxcanvas, canvas->line_join);
+    canvas->cxInteriorStyle(ctxcanvas, canvas->interior_style);
+    if (canvas->clip_mode != CD_CLIPOFF) canvas->cxClip(ctxcanvas, canvas->clip_mode);
+    if (canvas->use_matrix) canvas->cxTransform(ctxcanvas, canvas->matrix);
+  }
+
+  return CD_OK;
+}
+
+static void cdcreatecanvas(cdCanvas* canvas, void *data)
+{
+  cdCtxCanvas *ctxcanvas;
+  cairo_t* cr;
   NSView* view = (NSView*)data;
-  NSRect bounds;
-  int w, h;
 
   if (!view) return;
 
-  bounds = [view bounds];
-  w = (int)bounds.size.width; if (w <= 0) w = 1;
-  h = (int)bounds.size.height; if (h <= 0) h = 1;
+  NSRect bounds = [view bounds];
+  canvas->w = (int)bounds.size.width;
+  canvas->h = (int)bounds.size.height;
+  if (canvas->w <= 0) canvas->w = 1;
+  if (canvas->h <= 0) canvas->h = 1;
 
-  /* Create Cairo image surface as backing store */
-  cd_canvas->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
-  cd_canvas->cr = cairo_create(cd_canvas->surface);
-  cd_canvas->data = (void*)view;
+  /* Approximate screen resolution */
+  canvas->xres = 96.0 / 25.4;  /* ~3.78 pixels/mm */
+  canvas->yres = canvas->xres;
+  canvas->w_mm = ((double)canvas->w) / canvas->xres;
+  canvas->h_mm = ((double)canvas->h) / canvas->yres;
+
+  cr = cdcairoNativeCreateContext(canvas, view);
+  if (!cr) return;
+
+  ctxcanvas = cdcairoCreateCanvas(canvas, cr);
+  if (!ctxcanvas) return;
+
+  ctxcanvas->window = view;
 }
 
-static int cdactivateNATIVEWINDOW(cdCairoCanvas* cd_canvas)
-{
-  NSView* view = (NSView*)cd_canvas->data;
-  NSRect bounds;
-  int w, h;
-  CGContextRef cgContext;
-
-  if (!view) return 0;
-
-  bounds = [view bounds];
-  w = (int)bounds.size.width; if (w <= 0) w = 1;
-  h = (int)bounds.size.height; if (h <= 0) h = 1;
-
-  /* Resize backing surface if needed */
-  if (cairo_image_surface_get_width(cd_canvas->surface) != w ||
-      cairo_image_surface_get_height(cd_canvas->surface) != h)
-  {
-    cairo_destroy(cd_canvas->cr);
-    cairo_surface_destroy(cd_canvas->surface);
-    cd_canvas->surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
-    cd_canvas->cr = cairo_create(cd_canvas->surface);
-  }
-
-  /* Blit to the view's CGContext via Cairo Quartz surface */
-  cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  if (cgContext)
-  {
-    cairo_surface_t* qs = cairo_quartz_surface_create_for_cg_context(cgContext, w, h);
-    if (qs)
-    {
-      cairo_t* cr = cairo_create(qs);
-      cairo_set_source_surface(cr, cd_canvas->surface, 0, 0);
-      cairo_paint(cr);
-      cairo_destroy(cr);
-      cairo_surface_destroy(qs);
-    }
-  }
-  return 1;
-}
-
-static int cddeactivateNATIVEWINDOW(cdCairoCanvas* cd_canvas)
-{
-  (void)cd_canvas;
-  return 1;
-}
-
-static void cdinittableNATIVEWINDOW(cdCanvas* canvas)
+static void cdinittable(cdCanvas* canvas)
 {
   cdcairoInitTable(canvas);
+  canvas->cxKillCanvas = cdcairoKillCanvas;
+  canvas->cxActivate = cdactivate;
 }
 
 static cdContext cdNativeWindowContext =
 {
-  CD_CAP_ALL & ~(CD_CAP_PLAY | CD_CAP_YAXIS | CD_CAP_FPRINT),
+  CD_CAP_ALL & ~(CD_CAP_PLAY | CD_CAP_YAXIS | CD_CAP_REGION | CD_CAP_WRITEMODE | CD_CAP_PALETTE),
   CD_CTX_WINDOW,
-  cdcreatecanvasNATIVEWINDOW,
-  cdinittableNATIVEWINDOW,
+  cdcreatecanvas,
+  cdinittable,
   NULL,
-  cdactivateNATIVEWINDOW,
-  cddeactivateNATIVEWINDOW
+  NULL,
 };
 
 cdContext* cdContextNativeWindow(void)
