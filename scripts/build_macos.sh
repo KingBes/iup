@@ -192,10 +192,9 @@ if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
     tar xJf "cairo-${CAIRO_VER}.tar.xz"; rm -f "cairo-${CAIRO_VER}.tar.xz"
     cd "cairo-${CAIRO_VER}"
     meson setup _build --prefix="$CAIRO_PREFIX" --default-library=static \
-        -Dtests=disabled \
+        -Dtests=disabled -Ddocumentation=disabled \
         -Dquartz=enabled \
-        -Dxlib=disabled -Dxcb=disabled \
-        -Dpdf=disabled -Dps=disabled -Dsvg=disabled -Dscript=disabled
+        -Dxlib=disabled -Dxcb=disabled
     ninja -C _build -j"$JOBS"
     ninja -C _build install
     cd "$ROOT"
