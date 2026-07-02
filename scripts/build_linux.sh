@@ -130,7 +130,7 @@ done
 echo "[4/5] CD + IM Libraries"
 # CD common + X11 (瀹為檯瀛樺湪鐨勬枃浠跺垪琛?
 CD_X11="cd/src/x11/cdx11.c cd/src/x11/cdxclp.c cd/src/x11/cdxdbuf.c cd/src/x11/cdximg.c cd/src/x11/cdxnative.c cd/src/x11/xvertex.c"
-for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
+for f in cd/src/*.c cd/src/drv/cd*.c cd/src/drv/pptx.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c $CD_X11; do
     [ -f "$f" ] || continue
     [[ "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* || "$f" == *cdgl* || "$f" == *cgm* ]] && continue

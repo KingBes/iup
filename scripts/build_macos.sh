@@ -136,7 +136,7 @@ done
 # ===== CD + IM =====
 echo "[4/5] CD + IM Libraries"
 # CD 鈥?浣跨敤渚挎惡鍚庣 (璺宠繃 win32/gdiplus/X11, 浠ュ強闇€瑕?FTGL 鐨?cdgl)
-for f in cd/src/*.c cd/src/drv/cd*.c cd/src/intcgm/*.c cd/src/sim/*.c \
+for f in cd/src/*.c cd/src/drv/cd*.c cd/src/drv/pptx.c cd/src/intcgm/*.c cd/src/sim/*.c \
          cd/src/svg/*.c cd/src/minizip/*.c; do
     [ -f "$f" ] || continue
     [[ "$f" == *cdgl.c || "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* || "$f" == *cgm* ]] && continue
