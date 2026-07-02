@@ -7,6 +7,8 @@
  * non-functional on macOS unless a full CD backend is provided.
  */
 
+#include <stddef.h>
+
 #include <cd.h>
 #include <cdnative.h>
 #include <cddbuf.h>
