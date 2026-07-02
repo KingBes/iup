@@ -106,6 +106,9 @@ done
 echo "[2/5] IUP Cocoa Driver"
 for f in src/cocoa/*.m src/cocoa/*.c; do
     [ -f "$f" ] || continue
+    # iupmac_info.m is an older version; iupcocoa_info.m is the current one.
+    # Both define the same iupdrvGet* functions, causing duplicate symbols.
+    [[ "$f" == *iupmac_info.m ]] && continue
     if [[ "$f" == *.m ]]; then
         ALL_OBJ+=" $(compile_m "$f" "cocoa/")"
     else

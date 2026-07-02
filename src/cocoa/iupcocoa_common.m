@@ -769,6 +769,15 @@ int iupdrvBaseSetBgColorAttrib(Ihandle* ih, const char* value)
   return 0;
 }
 
+int iupdrvBaseSetFgColorAttrib(Ihandle* ih, const char* value)
+{
+  (void)ih;
+  (void)value;
+  /* FgColor is not commonly used for Cocoa controls (uses system theme colors).
+     Implement if needed for custom controls. */
+  return 0;
+}
+
 int iupdrvBaseSetCursorAttrib(Ihandle* ih, const char* value)
 {
 

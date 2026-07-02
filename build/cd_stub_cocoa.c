@@ -46,3 +46,29 @@ cdContext* cdContextGL(void)
 {
   return NULL;
 }
+
+void cdInitContextPlus(void)
+{
+  /* macOS has no ContextPlus driver (gdiplus/xrender/cairo). */
+}
+
+int cdUseContextPlus(int use)
+{
+  (void)use;
+  return 0;
+}
+
+cdContext* cdContextNativeWindowPlus(void)
+{
+  return NULL;
+}
+
+cdContext* cdContextDBufferPlus(void)
+{
+  return NULL;
+}
+
+cdContext* cdContextClipboardPlus(void)
+{
+  return NULL;
+}
