@@ -129,7 +129,7 @@ static cdContext cdNativeWindowContext =
   NULL,
 };
 
-cdContext* cdContextNativeWindow(void)
+cdContext* cdContextCairoNativeWindow(void)
 {
   return &cdNativeWindowContext;
 }
