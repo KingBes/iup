@@ -32,8 +32,11 @@
 
 #ifdef WIN32
 #include <windows.h>
-#endif
+#elif defined(__APPLE__)
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #pragma warning(push, 0)
 #include "mgl2/mgl.h"
@@ -971,9 +974,9 @@ static void iMglPlotDrawAxis(Ihandle* ih, mglGraph *gr, char dir, Iaxis& axis)
   sdir[i] = 0;
 
   /* TODO - more ticks options
-   ‘XYZ' for drawing axis in corresponding direction but with inverted positions of labels;
-   ‘U' for disabling rotation of tick labels;
-   ‘a' for forced adjusting of axis ticks.
+   ï¿½XYZ' for drawing axis in corresponding direction but with inverted positions of labels;
+   ï¿½U' for disabling rotation of tick labels;
+   ï¿½a' for forced adjusting of axis ticks.
 
     gr->SetOriginTick(axis.axTickShowOrigin);
     gr->SetTickRotate(false);
