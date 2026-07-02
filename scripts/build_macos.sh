@@ -36,7 +36,7 @@ else
 fi
 
 # ===== Common flags =====
-DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC"
+DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DNO_FONTCONFIG"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces -Wno-error=deprecated-declarations"
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 OBJCFLAGS="-fPIC -Wall -O2"
