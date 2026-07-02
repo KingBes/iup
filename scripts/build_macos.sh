@@ -79,7 +79,7 @@ if [ ! -f "$GLIB_PREFIX/lib/libglib-2.0.a" ]; then
         -Dlibelf=disabled -Dselinux=disabled -Dxattr=false \
         -Dtests=false -Dnls=disabled -Doss_fuzz=disabled \
         -Dlibmount=disabled -Ddtrace=false -Dsystemtap=false \
-        -Dsysprof=disabled -Dintrospection=disabled \
+        -Dsysprof=disabled \
         -Dman=false -Ddocumentation=false
     ninja -C _build -j"$JOBS"
     ninja -C _build install
@@ -103,7 +103,7 @@ if [ ! -f "$HB_PREFIX/lib/libharfbuzz.a" ]; then
         -Dtests=disabled -Ddocs=disabled -Dbenchmark=disabled \
         -Dicu=disabled -Dgraphite2=disabled \
         -Dfreetype=disabled -Dcairo=disabled -Dglib=enabled \
-        -Dgobject=disabled -Dintrospection=disabled \
+        -Dgobject=disabled \
         -Dcoretext=enabled
     ninja -C _build -j"$JOBS"
     ninja -C _build install
@@ -141,7 +141,7 @@ if [ ! -f "$PANGO_PREFIX/lib/libpango-1.0.a" ]; then
     tar xJf "pango-${PANGO_VER}.tar.xz"; rm -f "pango-${PANGO_VER}.tar.xz"
     cd "pango-${PANGO_VER}"
     meson setup _build --prefix="$PANGO_PREFIX" --default-library=static \
-        -Dintrospection=disabled -Dfontconfig=disabled \
+        -Dfontconfig=disabled \
         -Dxft=disabled -Dcairo=disabled -Dlibthai=disabled \
         -Ddocumentation=false
     ninja -C _build -j"$JOBS"
