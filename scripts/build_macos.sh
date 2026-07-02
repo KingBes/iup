@@ -292,7 +292,8 @@ compile_m() {
     local obj="$BUILD/${dir}${src##*/}.o"
     mkdir -p "$(dirname "$obj")"
     echo "  [M]  $src" >&2
-    $CC -c $OBJCFLAGS $DEFS $INCLUDES -o "$obj" "$src" || { echo "  FAILED: $src" >&2; return 1; }
+    # -x objective-c forces ObjC mode for .c files that include Cocoa headers
+    $CC -c -x objective-c $OBJCFLAGS $DEFS $INCLUDES -o "$obj" "$src" || { echo "  FAILED: $src" >&2; return 1; }
     echo "$obj"
 }
 
