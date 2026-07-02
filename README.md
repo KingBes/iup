@@ -2,8 +2,6 @@
 
 将 [IUP](https://www.tecgraf.puc-rio.br/iup/) 3.32 全部模块编译为 **单个零外部依赖的动态库**，支持 Windows / Linux / macOS。
 
-[![Build All Platforms](https://github.com/ewmailing/iup/actions/workflows/build.yml/badge.svg)](https://github.com/ewmailing/iup/actions/workflows/build.yml)
-
 ## 特性
 
 - 单文件库，无需安装任何第三方运行时
@@ -19,18 +17,6 @@
 | Linux x86_64 | `libiup.so` | GTK3 |
 | Linux aarch64 | `libiup.so` | GTK3 |
 | macOS aarch64 | `libiup.dylib` | Cocoa |
-
-### macOS 功能说明
-
-macOS Cocoa 后端部分模块以桩（stub）形式提供，保证库可编译和链接，但对应功能不可用：
-
-| 模块 | 状态 | 说明 |
-|------|------|------|
-| Scintilla | ⚠️ 桩 | Scintilla 3.11.2 无 Cocoa 后端（仅 gtk/win32） |
-| CD | ⚠️ 桩 | CD 无 macOS 原生后端，矢量绘图 API 不可用 |
-| Plot / MglPlot | ⚠️ 桩 | 依赖 CD，绘图功能不可用 |
-| GL 字体 | ⚠️ 桩 | 依赖 FTGL，GL 文字渲染不可用 |
-| OLE | N/A | Windows 专有功能 |
 
 ## 构建
 
@@ -85,13 +71,15 @@ bash scripts/build_linux.sh
 ### macOS
 
 ```bash
-# 仅需 Xcode Command Line Tools + wget
+# 需要: Xcode CLT, wget, meson, ninja
 brew install wget
+pip3 install meson ninja
+bash scripts/download_deps.sh
 
 bash scripts/build_macos.sh
 ```
 
-产物输出到 `build/macos/`。
+产物输出到 `build/macos/`。构建时间约 10-15 分钟（含依赖编译）。
 
 ## 模块清单
 

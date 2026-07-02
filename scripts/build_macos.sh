@@ -1,7 +1,12 @@
 #!/bin/bash
 # ===================================================================
 #  IUP macOS Cocoa Build - Single .dylib + .a (self-contained)
-#  依赖: Xcode CLT (freetype/zlib 从源码构建)
+#
+#  Builds ALL deps from source:
+#    zlib, freetype, FTGL, pixman, glib, harfbuzz, fribidi, pango,
+#    cairo, Scintilla 4.4.6 (Cocoa)
+#
+#  Requires: Xcode CLT, wget, meson, ninja
 # ===================================================================
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,56 +20,248 @@ mkdir -p "$BUILD" "$OUT" "$DEPS"
 
 CC=clang
 CXX=clang++
+PKG_CONFIG_PATH=""
+export PKG_CONFIG_PATH
 
-# ===== Build freetype + zlib from source (with -fPIC) =====
-FREETYPE_VER="2.13.2"
+add_pkgpath() {
+    PKG_CONFIG_PATH="$1/lib/pkgconfig:$1/share/pkgconfig:${PKG_CONFIG_PATH}"
+    export PKG_CONFIG_PATH
+}
+
+# ===================================================================
+# zlib
+# ===================================================================
 ZLIB_VER="1.3.1"
-FREETYPE_PREFIX="$DEPS/freetype"
 ZLIB_PREFIX="$DEPS/zlib"
-
-if [ ! -f "$FREETYPE_PREFIX/lib/libfreetype.a" ]; then
-    echo "=== Building freetype $FREETYPE_VER ==="
-    cd "$DEPS"
-    wget -q "https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE_VER.tar.xz"
-    tar xJf "freetype-$FREETYPE_VER.tar.xz"
-    rm -f "freetype-$FREETYPE_VER.tar.xz"
-    cd "freetype-$FREETYPE_VER"
-    ./configure --prefix="$FREETYPE_PREFIX" --with-pic --enable-static --disable-shared --without-harfbuzz --without-brotli --without-png --without-bzip2
-    make -j"$JOBS"
-    make install
-    cd "$ROOT"
-fi
 
 if [ ! -f "$ZLIB_PREFIX/lib/libz.a" ]; then
     echo "=== Building zlib $ZLIB_VER ==="
     cd "$DEPS"
     wget -q "https://github.com/madler/zlib/releases/download/v$ZLIB_VER/zlib-$ZLIB_VER.tar.gz"
-    tar xzf "zlib-$ZLIB_VER.tar.gz"
-    rm -f "zlib-$ZLIB_VER.tar.gz"
+    tar xzf "zlib-$ZLIB_VER.tar.gz"; rm -f "zlib-$ZLIB_VER.tar.gz"
     cd "zlib-$ZLIB_VER"
     CC="$CC" CFLAGS="-fPIC -O2" ./configure --prefix="$ZLIB_PREFIX" --static
-    make -j"$JOBS"
-    make install
+    make -j"$JOBS"; make install; cd "$ROOT"
+fi
+add_pkgpath "$ZLIB_PREFIX"
+
+# ===================================================================
+# freetype
+# ===================================================================
+FREETYPE_VER="2.13.2"
+FREETYPE_PREFIX="$DEPS/freetype"
+
+if [ ! -f "$FREETYPE_PREFIX/lib/libfreetype.a" ]; then
+    echo "=== Building freetype $FREETYPE_VER ==="
+    cd "$DEPS"
+    wget -q "https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE_VER.tar.xz"
+    tar xJf "freetype-$FREETYPE_VER.tar.xz"; rm -f "freetype-$FREETYPE_VER.tar.xz"
+    cd "freetype-$FREETYPE_VER"
+    ./configure --prefix="$FREETYPE_PREFIX" --with-pic --enable-static --disable-shared \
+        --without-harfbuzz --without-brotli --without-png --without-bzip2
+    make -j"$JOBS"; make install; cd "$ROOT"
+fi
+add_pkgpath "$FREETYPE_PREFIX"
+
+# ===================================================================
+# FTGL (depends on freetype)
+# ===================================================================
+FTGL_VER="2.4.0"
+FTGL_PREFIX="$DEPS/ftgl"
+
+if [ ! -f "$FTGL_PREFIX/lib/libftgl.a" ]; then
+    echo "=== Building FTGL $FTGL_VER ==="
+    cd "$DEPS"
+    wget -q "https://downloads.sourceforge.net/project/ftgl/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz" \
+        -O "ftgl-${FTGL_VER}.tar.gz"
+    tar xzf "ftgl-${FTGL_VER}.tar.gz"; rm -f "ftgl-${FTGL_VER}.tar.gz"
+    cd "ftgl-${FTGL_VER}"
+    FREETYPE_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include" \
+    FREETYPE_LIBS="-L$FREETYPE_PREFIX/lib -lfreetype" \
+    ./configure --prefix="$FTGL_PREFIX" --with-pic --enable-static --disable-shared --without-x
+    make -j"$JOBS"; make install; cd "$ROOT"
+fi
+add_pkgpath "$FTGL_PREFIX"
+
+# ===================================================================
+# glib (meson) - needed by harfbuzz, pango
+# ===================================================================
+GLIB_VER="2.78.6"
+GLIB_PREFIX="$DEPS/glib"
+
+if [ ! -f "$GLIB_PREFIX/lib/libglib-2.0.a" ]; then
+    echo "=== Building glib $GLIB_VER ==="
+    cd "$DEPS"
+    wget -q "https://download.gnome.org/sources/glib/${GLIB_VER%.*}/glib-${GLIB_VER}.tar.xz"
+    tar xJf "glib-${GLIB_VER}.tar.xz"; rm -f "glib-${GLIB_VER}.tar.xz"
+    cd "glib-${GLIB_VER}"
+    meson setup _build --prefix="$GLIB_PREFIX" --default-library=static \
+        -Dlibelf=disabled -Dselinux=disabled -Dxattr=false \
+        -Dtests=false -Dnls=disabled -Doss_fuzz=disabled \
+        -Dlibmount=disabled -Ddtrace=false -Dsystemtap=false \
+        -Dsysprof=disabled -Dintrospection=disabled \
+        -Dman=false -Ddocumentation=false
+    ninja -C _build -j"$JOBS"
+    ninja -C _build install
     cd "$ROOT"
 fi
+add_pkgpath "$GLIB_PREFIX"
 
-DEPS_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include -I$ZLIB_PREFIX/include"
-DEPS_LIBS="$FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
+# ===================================================================
+# harfbuzz (meson) - needed by pango
+# ===================================================================
+HB_VER="8.5.0"
+HB_PREFIX="$DEPS/harfbuzz"
 
-# ===== Common flags =====
-# 确保 tif_config.h 启用 HAVE_UNISTD_H (下载的原始版本是 #undef)
+if [ ! -f "$HB_PREFIX/lib/libharfbuzz.a" ]; then
+    echo "=== Building harfbuzz $HB_VER ==="
+    cd "$DEPS"
+    wget -q "https://github.com/harfbuzz/harfbuzz/releases/download/${HB_VER}/harfbuzz-${HB_VER}.tar.xz"
+    tar xJf "harfbuzz-${HB_VER}.tar.xz"; rm -f "harfbuzz-${HB_VER}.tar.xz"
+    cd "harfbuzz-${HB_VER}"
+    meson setup _build --prefix="$HB_PREFIX" --default-library=static \
+        -Dtests=disabled -Ddocs=disabled -Dbenchmark=disabled \
+        -Dicu=disabled -Dgraphite2=disabled \
+        -Dfreetype=disabled -Dcairo=disabled -Dglib=enabled \
+        -Dgobject=disabled -Dintrospection=disabled \
+        -Dcoretext=enabled
+    ninja -C _build -j"$JOBS"
+    ninja -C _build install
+    cd "$ROOT"
+fi
+add_pkgpath "$HB_PREFIX"
+
+# ===================================================================
+# fribidi (autotools) - needed by pango
+# ===================================================================
+FRIBIDI_VER="1.0.13"
+FRIBIDI_PREFIX="$DEPS/fribidi"
+
+if [ ! -f "$FRIBIDI_PREFIX/lib/libfribidi.a" ]; then
+    echo "=== Building fribidi $FRIBIDI_VER ==="
+    cd "$DEPS"
+    wget -q "https://github.com/fribidi/fribidi/releases/download/v${FRIBIDI_VER}/fribidi-${FRIBIDI_VER}.tar.xz"
+    tar xJf "fribidi-${FRIBIDI_VER}.tar.xz"; rm -f "fribidi-${FRIBIDI_VER}.tar.xz"
+    cd "fribidi-${FRIBIDI_VER}"
+    ./configure --prefix="$FRIBIDI_PREFIX" --enable-static --disable-shared --disable-docs
+    make -j"$JOBS"; make install; cd "$ROOT"
+fi
+add_pkgpath "$FRIBIDI_PREFIX"
+
+# ===================================================================
+# pango (meson) - text layout for CD Cairo
+# ===================================================================
+PANGO_VER="1.52.2"
+PANGO_PREFIX="$DEPS/pango"
+
+if [ ! -f "$PANGO_PREFIX/lib/libpango-1.0.a" ]; then
+    echo "=== Building pango $PANGO_VER ==="
+    cd "$DEPS"
+    wget -q "https://download.gnome.org/sources/pango/${PANGO_VER%.*}/pango-${PANGO_VER}.tar.xz"
+    tar xJf "pango-${PANGO_VER}.tar.xz"; rm -f "pango-${PANGO_VER}.tar.xz"
+    cd "pango-${PANGO_VER}"
+    meson setup _build --prefix="$PANGO_PREFIX" --default-library=static \
+        -Dintrospection=disabled -Dfontconfig=disabled \
+        -Dxft=disabled -Dcairo=disabled -Dlibthai=disabled \
+        -Ddocumentation=false
+    ninja -C _build -j"$JOBS"
+    ninja -C _build install
+    cd "$ROOT"
+fi
+add_pkgpath "$PANGO_PREFIX"
+
+# ===================================================================
+# pixman (autotools) - needed by cairo
+# ===================================================================
+PIXMAN_VER="0.44.2"
+PIXMAN_PREFIX="$DEPS/pixman"
+
+if [ ! -f "$PIXMAN_PREFIX/lib/libpixman-1.a" ]; then
+    echo "=== Building pixman $PIXMAN_VER ==="
+    cd "$DEPS"
+    wget -q "https://www.cairographics.org/releases/pixman-${PIXMAN_VER}.tar.gz"
+    tar xzf "pixman-${PIXMAN_VER}.tar.gz"; rm -f "pixman-${PIXMAN_VER}.tar.gz"
+    cd "pixman-${PIXMAN_VER}"
+    ./configure --prefix="$PIXMAN_PREFIX" --enable-static --disable-shared \
+        --disable-gtk --disable-libpng
+    make -j"$JOBS"; make install; cd "$ROOT"
+fi
+add_pkgpath "$PIXMAN_PREFIX"
+
+# ===================================================================
+# cairo (autotools) - depends on pixman, freetype, pango
+# ===================================================================
+CAIRO_VER="1.18.2"
+CAIRO_PREFIX="$DEPS/cairo"
+
+if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
+    echo "=== Building Cairo $CAIRO_VER ==="
+    cd "$DEPS"
+    wget -q "https://www.cairographics.org/releases/cairo-${CAIRO_VER}.tar.xz"
+    tar xJf "cairo-${CAIRO_VER}.tar.xz"; rm -f "cairo-${CAIRO_VER}.tar.xz"
+    cd "cairo-${CAIRO_VER}"
+    ./configure --prefix="$CAIRO_PREFIX" --enable-static --disable-shared \
+        --enable-quartz --enable-quartz-image \
+        --disable-xlib --disable-xcb --without-x \
+        --disable-pdf --disable-ps --disable-svg --disable-script \
+        --disable-full-testing
+    make -j"$JOBS"; make install; cd "$ROOT"
+fi
+add_pkgpath "$CAIRO_PREFIX"
+
+# ===================================================================
+# Scintilla 4.4.6 (includes Cocoa backend + lexers)
+# ===================================================================
+SCI_DIR="$DEPS/scintilla446"
+
+if [ ! -d "$SCI_DIR" ]; then
+    echo "=== Downloading Scintilla 4.4.6 ==="
+    cd "$DEPS"
+    wget -q "https://www.scintilla.org/scintilla446.tgz" -O "scintilla446.tgz"
+    tar xzf "scintilla446.tgz"; rm -f "scintilla446.tgz"
+    [ -d "scintilla" ] && mv scintilla scintilla446
+    cd "$ROOT"
+fi
+SCI_SRC="$SCI_DIR"
+
+# ===================================================================
+# Unified flags
+# ===================================================================
 if grep -q '^#undef HAVE_UNISTD_H' "$ROOT/im/src/libtiff/tif_config.h" 2>/dev/null; then
     perl -pi -e 's/^#undef HAVE_UNISTD_H$/#define HAVE_UNISTD_H/' "$ROOT/im/src/libtiff/tif_config.h"
 fi
-DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\"3.11.2\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DNO_FONTCONFIG -DUSE_ICONV -DPNG_ARM_NEON_OPT=0"
+
+DEPS_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include"
+DEPS_CFLAGS+=" -I$FTGL_PREFIX/include"
+DEPS_CFLAGS+=" -I$GLIB_PREFIX/include/glib-2.0 -I$GLIB_PREFIX/lib/glib-2.0/include"
+DEPS_CFLAGS+=" -I$HB_PREFIX/include/harfbuzz"
+DEPS_CFLAGS+=" -I$FRIBIDI_PREFIX/include/fribidi"
+DEPS_CFLAGS+=" -I$PANGO_PREFIX/include/pango-1.0"
+DEPS_CFLAGS+=" -I$PIXMAN_PREFIX/include/pixman-1"
+DEPS_CFLAGS+=" -I$CAIRO_PREFIX/include/cairo"
+DEPS_CFLAGS+=" -I$ZLIB_PREFIX/include"
+
+DEPS_LIBS="$CAIRO_PREFIX/lib/libcairo.a $PIXMAN_PREFIX/lib/libpixman-1.a"
+DEPS_LIBS+=" $PANGO_PREFIX/lib/libpango-1.0.a $PANGO_PREFIX/lib/libpangocairo-1.0.a"
+DEPS_LIBS+=" $HB_PREFIX/lib/libharfbuzz.a $FRIBIDI_PREFIX/lib/libfribidi.a"
+DEPS_LIBS+=" $GLIB_PREFIX/lib/libglib-2.0.a $GLIB_PREFIX/lib/libgmodule-2.0.a $GLIB_PREFIX/lib/libgobject-2.0.a $GLIB_PREFIX/lib/libgio-2.0.a $GLIB_PREFIX/lib/libgthread-2.0.a"
+DEPS_LIBS+=" $FTGL_PREFIX/lib/libftgl.a $FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
+DEPS_LIBS+=" -framework CoreFoundation -framework CoreGraphics -framework CoreText"
+
+SCINTILLA_VERSION="4.4.6"
+SCI_INCLUDES="-I$SCI_SRC/include -I$SCI_SRC/src -I$SCI_SRC/lexlib -I$SCI_SRC/lexers -I$SCI_SRC/cocoa"
+
+DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\"$SCINTILLA_VERSION\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DPNG_ARM_NEON_OPT=0"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces -Wno-error=deprecated-declarations"
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 OBJCFLAGS="-fPIC -Wall -O2"
+OBJCXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-error=deprecated-declarations"
 
-INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 -Ibuild $DEPS_CFLAGS"
+INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla $SCI_INCLUDES -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/cairo -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 -Ibuild $DEPS_CFLAGS"
 
 echo "=== macOS Cocoa Build ==="
 echo "Jobs: $JOBS"
+echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 
 compile_c() {
     local src="$1" dir="$2"
@@ -84,6 +281,15 @@ compile_m() {
     echo "$obj"
 }
 
+compile_mm() {
+    local src="$1" dir="$2"
+    local obj="$BUILD/${dir}${src##*/}.o"
+    mkdir -p "$(dirname "$obj")"
+    echo "  [MM] $src" >&2
+    $CXX -c $OBJCXXFLAGS $DEFS $INCLUDES -o "$obj" "$src" || { echo "  FAILED: $src" >&2; return 1; }
+    echo "$obj"
+}
+
 compile_cxx() {
     local src="$1" dir="$2"
     local obj="$BUILD/${dir}${src##*/}.o"
@@ -96,18 +302,16 @@ compile_cxx() {
 ALL_OBJ=""
 
 # ===== IUP Core =====
-echo "[1/5] IUP Core"
+echo "[1/7] IUP Core"
 for f in src/iup.c src/iup_*.c; do
     [ -f "$f" ] || continue
     ALL_OBJ+=" $(compile_c "$f" "iup/")"
 done
 
 # ===== IUP Cocoa Backend =====
-echo "[2/5] IUP Cocoa Driver"
+echo "[2/7] IUP Cocoa Driver"
 for f in src/cocoa/*.m src/cocoa/*.c; do
     [ -f "$f" ] || continue
-    # iupmac_info.m is an older version; iupcocoa_info.m is the current one.
-    # Both define the same iupdrvGet* functions, causing duplicate symbols.
     [[ "$f" == *iupmac_info.m ]] && continue
     if [[ "$f" == *.m ]]; then
         ALL_OBJ+=" $(compile_m "$f" "cocoa/")"
@@ -116,15 +320,15 @@ for f in src/cocoa/*.m src/cocoa/*.c; do
     fi
 done
 
-# ===== IUP Modules (鎺掗櫎 Windows 涓撴湁鏂囦欢) =====
-echo "[3/5] IUP Modules"
+# ===== IUP Modules =====
+echo "[3/7] IUP Modules"
 for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplot srctuio; do
     [ -d "$d" ] || continue
     for f in $(find "$d" -maxdepth 3 \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
         [[ "$f" == *dep/* ]] && continue
         [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *_win32* || "$f" == *_win.c || "$f" == *_win.cpp ]] && continue
         [[ "$f" == *gtk* || "$f" == *cocoa* || "$f" == *haiku* ]] && continue
-        [[ "$f" == *_x.c || "$f" == *_x11* || "$f" == *x11* ]] && continue  # X11/Linux backend, not for macOS
+        [[ "$f" == *_x.c || "$f" == *_x11* || "$f" == *x11* ]] && continue
         [[ "$f" == *cdgl.c ]] && continue
         [[ "$f" == *dx* || "$f" == *DX* || "$f" == *avi* || "$f" == *wmv* || "$f" == *jp2* || "$f" == *ecw* ]] && continue
         [[ "$f" == *jas_* ]] && continue
@@ -136,40 +340,67 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
     done
 done
 
-# ===== Stubs & Platform-specific additions =====
-# FTGL stub (provides GL font rendering stubs when FTGL is not installed)
-ALL_OBJ+=" $(compile_cxx "build/ftgl_stub.cpp" "stub/")"
+# ===== FTGL wrapper =====
+echo "  [CXX] build/ftgl_real.cpp" >&2
+mkdir -p "$BUILD/stub"
+$CXX -c $CXXFLAGS $DEFS -I$FTGL_PREFIX/include $INCLUDES \
+    -o "$BUILD/stub/ftgl_real.cpp.o" "build/ftgl_real.cpp" \
+    || { echo "  FAILED: build/ftgl_real.cpp" >&2; exit 1; }
+ALL_OBJ+=" $BUILD/stub/ftgl_real.cpp.o"
 
-# Oscpack POSIX backend (needed for TUIO on macOS/Linux)
+# ===== Oscpack POSIX (TUIO) =====
 for f in srctuio/oscpack/ip/posix/*.cpp; do
     [ -f "$f" ] || continue
     ALL_OBJ+=" $(compile_cxx "$f" "oscpack/")"
 done
 
 # ===== CD + IM =====
-echo "[4/5] CD + IM Libraries"
-# CD 鈥?浣跨敤渚挎惡鍚庣 (璺宠繃 win32/gdiplus/X11, 浠ュ強闇€瑕?FTGL 鐨?cdgl)
-for f in cd/src/*.c cd/src/drv/cd*.c cd/src/drv/pptx.c cd/src/intcgm/*.c cd/src/sim/*.c \
-         cd/src/svg/*.c cd/src/minizip/*.c; do
+echo "[4/7] CD + IM"
+
+# CD core + drivers (incl. cdgl.c)
+for f in cd/src/*.c cd/src/drv/cd*.c cd/src/drv/pptx.c \
+         cd/src/sim/*.c cd/src/svg/*.c cd/src/minizip/*.c; do
     [ -f "$f" ] || continue
-    [[ "$f" == *cdgl.c || "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* || "$f" == *cgm* ]] && continue
+    [[ "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* ]] && continue
     ALL_OBJ+=" $(compile_c "$f" "cd/")"
 done
-# CD macOS stubs (provides platform-specific CD symbols not available on macOS)
+
+# CD Cairo backend (with Pango, now available!)
+for f in cd/src/cairo/*.c cd/src/cairo/*.m; do
+    [ -f "$f" ] || continue
+    [[ "$f" == *cdcaironative_gdk* ]] && continue
+    [[ "$f" == *cdcaironative_win32* ]] && continue
+    [[ "$f" == *cdcaironative_x11* ]] && continue
+    [[ "$f" == *cdcairoprn_gtk* ]] && continue
+    [[ "$f" == *cdcairoprn_win32* ]] && continue
+    if [[ "$f" == *.m ]]; then
+        ALL_OBJ+=" $(compile_m "$f" "cdcairo/")"
+    else
+        ALL_OBJ+=" $(compile_c "$f" "cdcairo/")"
+    fi
+done
+
+# CD intcgm
+for f in cd/src/intcgm/*.c; do
+    [ -f "$f" ] || continue
+    [[ "$f" == *cgm* ]] && continue
+    ALL_OBJ+=" $(compile_c "$f" "cdintcgm/")"
+done
+
+# CD stub (only cdContextClipboard remains)
 ALL_OBJ+=" $(compile_c "build/cd_stub_cocoa.c" "cdstub/")"
 
-# IM core (portable 鈥?鎺掗櫎 Win32 涓撳睘鏂囦欢)
+# IM
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
     [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* || "$f" == *im_capture_dx* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* || "$f" == *jas_* ]] && continue
-    [[ "$f" == *tiff_binfile* ]] && continue  # tif_unix.c already provides these on macOS
+    [[ "$f" == *tiff_binfile* ]] && continue
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else
         ALL_OBJ+=" $(compile_c "$f" "im/")"
     fi
 done
-# IM format libs
 for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/liblzf im/src/lz4; do
     [ -d "$d" ] || continue
     for f in $(find "$d" \( -name '*.c' -o -name '*.cpp' \) 2>/dev/null); do
@@ -183,20 +414,42 @@ for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/liblzf im/src/lz4; d
     done
 done
 
-# ===== Scintilla (macOS: no Cocoa backend, stub only) =====
-echo "[5/5] Scintilla (stub)"
-# Note: Scintilla 3.11.2 has no Cocoa platform backend, only gtk/ and win32/.
-# We skip the core .cxx files, iup_scintilla.c, and iupsci_*.c since they all
-# require a working Scintilla platform backend. Only the Cocoa stub is compiled.
-ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilla_cocoa.c" "sciw/")"
-# GL canvas Cocoa stub
+# ===== Scintilla 4.4.6 (Cocoa) =====
+echo "[5/7] Scintilla $SCINTILLA_VERSION Core"
+for f in "$SCI_SRC"/src/*.cxx; do
+    [ -f "$f" ] || continue
+    ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
+done
+
+echo "[6/7] Scintilla Lexers + Cocoa Platform"
+for f in "$SCI_SRC"/lexlib/*.cxx "$SCI_SRC"/lexers/*.cxx; do
+    [ -f "$f" ] || continue
+    [[ "$f" == *ExternalLexer* || "$f" == *LexLPeg* ]] && continue
+    ALL_OBJ+=" $(compile_cxx "$f" "scilex/")"
+done
+for f in "$SCI_SRC"/cocoa/*.cxx "$SCI_SRC"/cocoa/*.mm; do
+    [ -f "$f" ] || continue
+    if [[ "$f" == *.mm ]]; then
+        ALL_OBJ+=" $(compile_mm "$f" "scicocoa/")"
+    else
+        ALL_OBJ+=" $(compile_cxx "$f" "scicocoa/")"
+    fi
+done
+
+# ===== IUP Scintilla wrapper + GL canvas =====
+echo "[7/7] IUP Scintilla + GL"
+ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilla.c" "sciw/")"
+ALL_OBJ+=" $(compile_m "srcscintilla/iup_scintilla_cocoa.m" "sciw/")"
+ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilladlg.c" "sciw/")"
+for f in srcscintilla/iupsci_*.c; do
+    [ -f "$f" ] || continue
+    ALL_OBJ+=" $(compile_c "$f" "sciw/")"
+done
 ALL_OBJ+=" $(compile_c "srcgl/iup_glcanvas_cocoa.c" "gl/")"
 
-# ===== Link Single Dynamic Library (.dylib) 鈥?闆跺閮ㄤ緷璧?=====
+# ===== Link =====
 echo ""
 echo "=== Linking libiup.dylib (self-contained) ==="
-# 闈欐€侀摼鎺?freetype/bz2/png锛屾鏋跺拰绯荤粺搴撲繚鎸佸姩鎬?
-# freetype/z 用本地构建的静态库；Cocoa/OpenGL 为系统框架
 $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
     $DEPS_LIBS \
     -framework Cocoa -framework OpenGL -framework QuartzCore -framework SystemConfiguration \
@@ -205,7 +458,6 @@ $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
 echo "=== Creating libiup.a ==="
 ar rcs "$OUT/libiup.a" $ALL_OBJ
 
-# ===== Package =====
 echo "=== Packaging ==="
 mkdir -p "$OUT/include"
 cp -r include/* "$OUT/include/"
@@ -214,5 +466,4 @@ echo ""
 echo "=== macOS Build Complete ==="
 echo "  Shared: $OUT/libiup.dylib"
 echo "  Static: $OUT/libiup.a"
-echo "  Headers: $OUT/include/"
 ls -lh "$OUT/libiup.dylib" "$OUT/libiup.a"
