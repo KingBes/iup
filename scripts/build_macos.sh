@@ -72,10 +72,15 @@ FTGL_PREFIX="$DEPS/ftgl"
 if [ ! -f "$FTGL_PREFIX/lib/libftgl.a" ]; then
     echo "=== Building FTGL $FTGL_VER ==="
     cd "$DEPS"
+    # GitHub mirror is more reliable than SourceForge
+    wget -q "https://github.com/ulrichard/ftgl/archive/refs/tags/v${FTGL_VER}.tar.gz" \
+        -O "ftgl-${FTGL_VER}.tar.gz" 2>/dev/null || \
     wget -q "https://downloads.sourceforge.net/project/ftgl/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz" \
         -O "ftgl-${FTGL_VER}.tar.gz"
     tar xzf "ftgl-${FTGL_VER}.tar.gz"; rm -f "ftgl-${FTGL_VER}.tar.gz"
-    cd "ftgl-${FTGL_VER}"
+    # GitHub archive extracts to ftgl-2.4.0/, SourceForge to ftgl-2.4.0/
+    FTGL_DIR=$(ls -d ftgl-* 2>/dev/null | head -1)
+    cd "$FTGL_DIR"
     FREETYPE_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include" \
     FREETYPE_LIBS="-L$FREETYPE_PREFIX/lib -lfreetype" \
     ./configure --prefix="$FTGL_PREFIX" --with-pic --enable-static --disable-shared --without-x
