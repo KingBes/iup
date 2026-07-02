@@ -138,28 +138,6 @@ fi
 add_pkgpath "$FRIBIDI_PREFIX"
 
 # ===================================================================
-# pango (meson) - text layout for CD Cairo
-# ===================================================================
-PANGO_VER="1.52.2"
-PANGO_PREFIX="$DEPS/pango"
-
-if [ ! -f "$PANGO_PREFIX/lib/libpango-1.0.a" ]; then
-    echo "=== Building pango $PANGO_VER ==="
-    cd "$DEPS"
-    wget -q "https://download.gnome.org/sources/pango/${PANGO_VER%.*}/pango-${PANGO_VER}.tar.xz"
-    tar xJf "pango-${PANGO_VER}.tar.xz"; rm -f "pango-${PANGO_VER}.tar.xz"
-    cd "pango-${PANGO_VER}"
-    meson setup _build --prefix="$PANGO_PREFIX" --default-library=static \
-        -Dfontconfig=disabled \
-        -Dxft=disabled -Dcairo=disabled -Dlibthai=disabled \
-        -Dgtk_doc=false -Dinstall-tests=false
-    ninja -C _build -j"$JOBS"
-    ninja -C _build install
-    cd "$ROOT"
-fi
-add_pkgpath "$PANGO_PREFIX"
-
-# ===================================================================
 # pixman (meson) - needed by cairo
 # ===================================================================
 PIXMAN_VER="0.44.2"
@@ -204,7 +182,9 @@ LZOEOF
 add_pkgpath "$LZO_OVERRIDE_DIR"
 
 # ===================================================================
-# cairo (meson) - depends on pixman, freetype, pango, lzo
+# cairo (meson) - depends on pixman, freetype, lzo
+# Built BEFORE pango so that pango can find cairo and build pangocairo
+# ===================================================================
 # ===================================================================
 CAIRO_VER="1.18.2"
 CAIRO_PREFIX="$DEPS/cairo"
@@ -224,6 +204,29 @@ if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
     cd "$ROOT"
 fi
 add_pkgpath "$CAIRO_PREFIX"
+
+# ===================================================================
+# pango (meson) - text layout for CD Cairo, built AFTER cairo so
+# that pangocairo.h is available
+# ===================================================================
+PANGO_VER="1.52.2"
+PANGO_PREFIX="$DEPS/pango"
+
+if [ ! -f "$PANGO_PREFIX/lib/libpango-1.0.a" ]; then
+    echo "=== Building pango $PANGO_VER ==="
+    cd "$DEPS"
+    wget -q "https://download.gnome.org/sources/pango/${PANGO_VER%.*}/pango-${PANGO_VER}.tar.xz"
+    tar xJf "pango-${PANGO_VER}.tar.xz"; rm -f "pango-${PANGO_VER}.tar.xz"
+    cd "pango-${PANGO_VER}"
+    meson setup _build --prefix="$PANGO_PREFIX" --default-library=static \
+        -Dfontconfig=disabled \
+        -Dxft=disabled -Dcairo=enabled -Dlibthai=disabled \
+        -Dgtk_doc=false -Dinstall-tests=false
+    ninja -C _build -j"$JOBS"
+    ninja -C _build install
+    cd "$ROOT"
+fi
+add_pkgpath "$PANGO_PREFIX"
 
 # ===================================================================
 # Scintilla 4.4.6 (includes Cocoa backend + lexers)
