@@ -113,6 +113,7 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
         [[ "$f" == *gtk* || "$f" == *cocoa* || "$f" == *haiku* ]] && continue
         [[ "$f" == *dx* || "$f" == *DX* || "$f" == *avi* || "$f" == *wmv* || "$f" == *jp2* || "$f" == *ecw* ]] && continue
         [[ "$f" == *jas_* ]] && continue
+        [[ "$f" == *iup_glfont.c ]] && continue  # ftgl 依赖已用 stub 替代
         if [[ "$f" == *.cpp ]]; then
             ALL_OBJ+=" $(compile_cxx "$f" "mod/")"
         else
@@ -176,15 +177,11 @@ for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
 
-# FTGL stub: 替代 libftgl 动态依赖，使 .so 自包含
-FTGL_STUB_OBJ=$(compile_cxx "build/ftgl_stub.cpp" "stub/")
-ALL_OBJ+=" $FTGL_STUB_OBJ"
-
 # ===== Link Single Shared Library (.so) =====
 echo ""
 echo "=== Linking libiup.so (self-contained) ==="
 GTK_LIBS=$(pkg-config --libs gtk+-3.0 2>/dev/null || echo "")
-# freetype/z 用本地构建的静态库；ftgl 用 stub；GTK3/GL/X11 为系统依赖
+# freetype/z 用本地构建的静态库；GTK3/GL/X11 为系统依赖
 $CXX -shared -o "$OUT/libiup.so" $ALL_OBJ \
     $DEPS_LIBS -lGLU \
     $GTK_LIBS -lGL -lX11 -lXrender -lm -lpthread -ldl
