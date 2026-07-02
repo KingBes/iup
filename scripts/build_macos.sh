@@ -24,14 +24,23 @@ else
     HOMEBREW_PREFIX=""
 fi
 
-# 濡傛灉鏈?Homebrew freetype锛堝彧鐢ㄥ姩鎬?.dylib锛孒omebrew bottles 涓嶅惈 .a锛?
+# Detect freetype via brew or fallback to common paths
 FREETYPE_INC=""
 FREETYPE_LIB=""
-if [ -n "$HOMEBREW_PREFIX" ] && [ -f "$HOMEBREW_PREFIX/include/ft2build.h" ]; then
+if command -v brew >/dev/null 2>&1; then
+    FT_PREFIX=$(brew --prefix freetype 2>/dev/null || true)
+    if [ -n "$FT_PREFIX" ] && [ -f "$FT_PREFIX/include/ft2build.h" ]; then
+        FREETYPE_INC="-I$FT_PREFIX/include/freetype2 -I$FT_PREFIX/include"
+        FREETYPE_LIB="-L$FT_PREFIX/lib -lfreetype"
+        echo "Freetype: $FT_PREFIX"
+    fi
+fi
+if [ -z "$FREETYPE_INC" ] && [ -n "$HOMEBREW_PREFIX" ] && [ -f "$HOMEBREW_PREFIX/include/ft2build.h" ]; then
     FREETYPE_INC="-I$HOMEBREW_PREFIX/include/freetype2 -I$HOMEBREW_PREFIX/include"
     FREETYPE_LIB="-L$HOMEBREW_PREFIX/lib -lfreetype"
     echo "Freetype: $HOMEBREW_PREFIX"
-else
+fi
+if [ -z "$FREETYPE_INC" ]; then
     echo "WARNING: freetype not found, building without CD SIM font support"
 fi
 
