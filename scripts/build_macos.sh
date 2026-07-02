@@ -61,7 +61,7 @@ CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wn
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 OBJCFLAGS="-fPIC -Wall -O2"
 
-INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 $DEPS_CFLAGS"
+INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 -Ibuild/FTGL $DEPS_CFLAGS"
 
 echo "=== macOS Cocoa Build ==="
 echo "Jobs: $JOBS"
@@ -122,7 +122,7 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
         [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *_win32* || "$f" == *_win.c || "$f" == *_win.cpp ]] && continue
         [[ "$f" == *gtk* || "$f" == *cocoa* || "$f" == *haiku* ]] && continue
         [[ "$f" == *_x.c || "$f" == *_x11* || "$f" == *x11* ]] && continue  # X11/Linux backend, not for macOS
-        [[ "$f" == *iup_glfont.c || "$f" == *cdgl.c ]] && continue
+        [[ "$f" == *cdgl.c ]] && continue
         [[ "$f" == *dx* || "$f" == *DX* || "$f" == *avi* || "$f" == *wmv* || "$f" == *jp2* || "$f" == *ecw* ]] && continue
         [[ "$f" == *jas_* ]] && continue
         if [[ "$f" == *.cpp ]]; then
@@ -131,6 +131,16 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
             ALL_OBJ+=" $(compile_c "$f" "mod/")"
         fi
     done
+done
+
+# ===== Stubs & Platform-specific additions =====
+# FTGL stub (provides GL font rendering stubs when FTGL is not installed)
+ALL_OBJ+=" $(compile_cxx "build/ftgl_stub.cpp" "stub/")"
+
+# Oscpack POSIX backend (needed for TUIO on macOS/Linux)
+for f in srctuio/oscpack/ip/posix/*.cpp; do
+    [ -f "$f" ] || continue
+    ALL_OBJ+=" $(compile_cxx "$f" "oscpack/")"
 done
 
 # ===== CD + IM =====
@@ -142,6 +152,8 @@ for f in cd/src/*.c cd/src/drv/cd*.c cd/src/drv/pptx.c cd/src/intcgm/*.c cd/src/
     [[ "$f" == *cdgl.c || "$f" == *cdpdf* || "$f" == *cddgn* || "$f" == *cddxf* || "$f" == *cgm* ]] && continue
     ALL_OBJ+=" $(compile_c "$f" "cd/")"
 done
+# CD macOS stubs (provides platform-specific CD symbols not available on macOS)
+ALL_OBJ+=" $(compile_c "build/cd_stub_cocoa.c" "cdstub/")"
 
 # IM core (portable 鈥?鎺掗櫎 Win32 涓撳睘鏂囦欢)
 for f in im/src/*.cpp im/src/*.c; do
@@ -168,20 +180,12 @@ for d in im/src/libtiff im/src/libjpeg im/src/libpng im/src/liblzf im/src/lz4; d
     done
 done
 
-# ===== Scintilla (鎺掗櫎 win32 骞冲彴灞? =====
-echo "[5/5] Scintilla"
-SCIBASE="srcscintilla/scintilla3112"
-for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; do
-    [ -f "$f" ] || continue
-    [[ "$f" == *LexLPeg* ]] && continue
-    [[ "$f" == *ExternalLexer* ]] && continue
-    ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
-done
-for f in srcscintilla/iup_scintilla.c srcscintilla/iup_scintilla_cocoa.c \
-         srcscintilla/iup_scintilladlg.c srcscintilla/iupsci_*.c; do
-    [ -f "$f" ] || continue
-    ALL_OBJ+=" $(compile_c "$f" "sciw/")"
-done
+# ===== Scintilla (macOS: no Cocoa backend, stub only) =====
+echo "[5/5] Scintilla (stub)"
+# Note: Scintilla 3.11.2 has no Cocoa platform backend, only gtk/ and win32/.
+# We skip the core .cxx files, iup_scintilla.c, and iupsci_*.c since they all
+# require a working Scintilla platform backend. Only the Cocoa stub is compiled.
+ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilla_cocoa.c" "sciw/")"
 # GL canvas Cocoa stub
 ALL_OBJ+=" $(compile_c "srcgl/iup_glcanvas_cocoa.c" "gl/")"
 
@@ -192,8 +196,8 @@ echo "=== Linking libiup.dylib (self-contained) ==="
 # freetype/z 用本地构建的静态库；Cocoa/OpenGL 为系统框架
 $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
     $DEPS_LIBS \
-    -framework Cocoa -framework OpenGL \
-    -lm -lpthread
+    -framework Cocoa -framework OpenGL -framework QuartzCore -framework SystemConfiguration \
+    -liconv -lm -lpthread
 
 echo "=== Creating libiup.a ==="
 ar rcs "$OUT/libiup.a" $ALL_OBJ
