@@ -141,13 +141,17 @@ for f in srcscintilla/iup_scintilla.c srcscintilla/iupsci_*.c; do
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
 
-# ===== Link Single Shared Library (.so) 鈥?闆跺閮ㄤ緷璧?=====
+# FTGL stub: 替代 libftgl 动态依赖，使 .so 自包含
+FTGL_STUB_OBJ=$(compile_cxx "build/ftgl_stub.cpp" "stub/")
+ALL_OBJ+=" $FTGL_STUB_OBJ"
+
+# ===== Link Single Shared Library (.so) =====
 echo ""
 echo "=== Linking libiup.so (self-contained) ==="
 GTK_LIBS=$(pkg-config --libs gtk+-3.0 2>/dev/null || echo "")
-# 动态链接 freetype/z/ftgl/GLU (系统 .a 未编译 -fPIC，无法链入 .so)
+# ftgl 用 stub 替代避免运行时依赖；freetype/z 动态链接 (系统 .a 未编译 -fPIC)
 $CXX -shared -o "$OUT/libiup.so" $ALL_OBJ \
-    -Wl,-Bdynamic -lfreetype -lz -lftgl -lGLU \
+    -Wl,-Bdynamic -lfreetype -lz -lGLU \
     $GTK_LIBS -lGL -lX11 -lXrender -lm -lpthread -ldl
 
 # ===== Static Library (.a) =====
