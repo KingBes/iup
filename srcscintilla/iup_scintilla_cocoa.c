@@ -4,6 +4,8 @@
  * Provides platform stubs for macOS/Cocoa builds.
  */
 
+#include "Scintilla.h"
+
 #include "iup.h"
 #include "iup_class.h"
 #include "iupsci.h"
