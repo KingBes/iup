@@ -72,13 +72,15 @@ FTGL_PREFIX="$DEPS/ftgl"
 if [ ! -f "$FTGL_PREFIX/lib/libftgl.a" ]; then
     echo "=== Building FTGL $FTGL_VER ==="
     cd "$DEPS"
-    # GitHub mirror is more reliable than SourceForge
-    wget -q "https://github.com/ulrichard/ftgl/archive/refs/tags/v${FTGL_VER}.tar.gz" \
-        -O "ftgl-${FTGL_VER}.tar.gz" 2>/dev/null || \
-    wget -q "https://downloads.sourceforge.net/project/ftgl/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz" \
-        -O "ftgl-${FTGL_VER}.tar.gz"
+    # Try multiple sources for reliability
+    wget -q --show-progress -O "ftgl-${FTGL_VER}.tar.gz" \
+        "https://github.com/ulrichard/ftgl/archive/refs/tags/${FTGL_VER}.tar.gz" 2>/dev/null || \
+    wget -q --show-progress -O "ftgl-${FTGL_VER}.tar.gz" \
+        "https://github.com/ulrichard/ftgl/archive/refs/tags/v${FTGL_VER}.tar.gz" 2>/dev/null || \
+    wget -q --show-progress -O "ftgl-${FTGL_VER}.tar.gz" \
+        "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz/download" 2>/dev/null || \
+    { echo "ERROR: Failed to download FTGL ${FTGL_VER}" >&2; exit 1; }
     tar xzf "ftgl-${FTGL_VER}.tar.gz"; rm -f "ftgl-${FTGL_VER}.tar.gz"
-    # GitHub archive extracts to ftgl-2.4.0/, SourceForge to ftgl-2.4.0/
     FTGL_DIR=$(ls -d ftgl-* 2>/dev/null | head -1)
     cd "$FTGL_DIR"
     FREETYPE_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include" \
