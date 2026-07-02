@@ -57,7 +57,7 @@ DEPS_LIBS="$FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
 if grep -q '^#undef HAVE_UNISTD_H' "$ROOT/im/src/libtiff/tif_config.h" 2>/dev/null; then
     perl -pi -e 's/^#undef HAVE_UNISTD_H$/#define HAVE_UNISTD_H/' "$ROOT/im/src/libtiff/tif_config.h"
 fi
-DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\\\"3.11.2\\\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DNO_CXX11_REGEX -DMGL_STATIC_DEFINE -DMGL_SRC"
+DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION=\"3.11.2\" -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DNO_CXX11_REGEX -DMGL_STATIC_DEFINE -DMGL_SRC"
 CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-missing-braces -Wno-error=deprecated-declarations"
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -fpermissive -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 
