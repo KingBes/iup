@@ -25,7 +25,7 @@ void iupdrvScintillaOpen(void) {}
 
 int idrvScintillaMap(Ihandle* ih)
 {
-  NSView* parent = (NSView*)IupGetAttribute(ih, "HWND");
+  NSView* parent = (__bridge NSView*)IupGetAttribute(ih, "HWND");
   int w = ih->currentwidth;
   int h = ih->currentheight;
   if (w <= 0) w = 100;
@@ -36,7 +36,7 @@ int idrvScintillaMap(Ihandle* ih)
   if (!sciView) return 0;
 
   if (parent) [parent addSubview:sciView];
-  ih->handle = (InativeHandle*)sciView;
+  ih->handle = (__bridge void*)sciView;
   return 1;
 }
 
@@ -48,7 +48,7 @@ int  iupdrvScintillaPrintAttrib(Ihandle* ih, const char* value) { (void)ih; (voi
 sptr_t IupScintillaSendMessage(Ihandle* ih, unsigned int iMessage,
                                 uptr_t wParam, sptr_t lParam)
 {
-  ScintillaView* sciView = (ScintillaView*)ih->handle;
+  ScintillaView* sciView = (__bridge ScintillaView*)ih->handle;
   if (!sciView) return 0;
   return [sciView message:iMessage wParam:wParam lParam:lParam];
 }
