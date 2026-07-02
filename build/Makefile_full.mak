@@ -22,7 +22,7 @@ DEFINES  = -DIUP_BUILD_LIBRARY -DIUP_DLL \
            -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE \
            -D_WIN32 -DWIN32 -DDISABLE_D2D -DNO_CXX11_REGEX \
            -DIUP_IMGLIB_LARGE_ICON -DOSC_HOST_LITTLE_ENDIAN \
-           -DSCINTILLA_VERSION='"3.11.2"' -D_USE_MATH_DEFINES
+           -DSCINTILLA_VERSION=\"3.11.2\" -D_USE_MATH_DEFINES
 
 CFLAGS   = -fpermissive -Wall -O2 -m64 -pipe $(DEFINES) \
            -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
