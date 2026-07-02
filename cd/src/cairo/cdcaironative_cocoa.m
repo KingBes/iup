@@ -89,6 +89,11 @@ static int cddeactivateNATIVEWINDOW(cdCairoCanvas* cd_canvas)
   return 1;
 }
 
+static void cdinittableNATIVEWINDOW(cdCanvas* canvas)
+{
+  cdcairoInitTable(canvas);
+}
+
 static cdContext cdNativeWindowContext =
 {
   CD_CAP_ALL & ~(CD_CAP_PLAY | CD_CAP_YAXIS | CD_CAP_FPRINT),

@@ -64,27 +64,6 @@ fi
 add_pkgpath "$FREETYPE_PREFIX"
 
 # ===================================================================
-# FTGL (depends on freetype)
-# ===================================================================
-FTGL_VER="2.4.0"
-FTGL_PREFIX="$DEPS/ftgl"
-
-if [ ! -f "$FTGL_PREFIX/lib/libftgl.a" ]; then
-    echo "=== Building FTGL $FTGL_VER ==="
-    cd "$DEPS"
-    curl -L -o "ftgl-${FTGL_VER}.tar.gz" \
-        "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/${FTGL_VER}/ftgl-${FTGL_VER}.tar.gz/download" \
-        || { echo "ERROR: Failed to download FTGL ${FTGL_VER}" >&2; exit 1; }
-    tar xzf "ftgl-${FTGL_VER}.tar.gz"; rm -f "ftgl-${FTGL_VER}.tar.gz"
-    cd "ftgl-${FTGL_VER}"
-    FREETYPE_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include" \
-    FREETYPE_LIBS="-L$FREETYPE_PREFIX/lib -lfreetype" \
-    ./configure --prefix="$FTGL_PREFIX" --with-pic --enable-static --disable-shared --without-x
-    make -j"$JOBS"; make install; cd "$ROOT"
-fi
-add_pkgpath "$FTGL_PREFIX"
-
-# ===================================================================
 # glib (meson) - needed by harfbuzz, pango
 # ===================================================================
 GLIB_VER="2.78.6"
@@ -233,7 +212,6 @@ if grep -q '^#undef HAVE_UNISTD_H' "$ROOT/im/src/libtiff/tif_config.h" 2>/dev/nu
 fi
 
 DEPS_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include"
-DEPS_CFLAGS+=" -I$FTGL_PREFIX/include"
 DEPS_CFLAGS+=" -I$GLIB_PREFIX/include/glib-2.0 -I$GLIB_PREFIX/lib/glib-2.0/include"
 DEPS_CFLAGS+=" -I$HB_PREFIX/include/harfbuzz"
 DEPS_CFLAGS+=" -I$FRIBIDI_PREFIX/include/fribidi"
@@ -246,7 +224,7 @@ DEPS_LIBS="$CAIRO_PREFIX/lib/libcairo.a $PIXMAN_PREFIX/lib/libpixman-1.a"
 DEPS_LIBS+=" $PANGO_PREFIX/lib/libpango-1.0.a $PANGO_PREFIX/lib/libpangocairo-1.0.a"
 DEPS_LIBS+=" $HB_PREFIX/lib/libharfbuzz.a $FRIBIDI_PREFIX/lib/libfribidi.a"
 DEPS_LIBS+=" $GLIB_PREFIX/lib/libglib-2.0.a $GLIB_PREFIX/lib/libgmodule-2.0.a $GLIB_PREFIX/lib/libgobject-2.0.a $GLIB_PREFIX/lib/libgio-2.0.a $GLIB_PREFIX/lib/libgthread-2.0.a"
-DEPS_LIBS+=" $FTGL_PREFIX/lib/libftgl.a $FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
+DEPS_LIBS+=" $FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
 DEPS_LIBS+=" -framework CoreFoundation -framework CoreGraphics -framework CoreText"
 
 SCINTILLA_VERSION="4.4.6"
@@ -316,6 +294,8 @@ for f in src/cocoa/*.m src/cocoa/*.c; do
     [[ "$f" == *iupmac_info.m ]] && continue
     if [[ "$f" == *.m ]]; then
         ALL_OBJ+=" $(compile_m "$f" "cocoa/")"
+    elif [[ "$f" == *iupcocoa_str.c ]]; then
+        ALL_OBJ+=" $(compile_m "$f" "cocoa/")"
     else
         ALL_OBJ+=" $(compile_c "$f" "cocoa/")"
     fi
@@ -344,7 +324,7 @@ done
 # ===== FTGL wrapper =====
 echo "  [CXX] build/ftgl_real.cpp" >&2
 mkdir -p "$BUILD/stub"
-$CXX -c $CXXFLAGS $DEFS -I$FTGL_PREFIX/include $INCLUDES \
+$CXX -c $CXXFLAGS $DEFS $INCLUDES \
     -o "$BUILD/stub/ftgl_real.cpp.o" "build/ftgl_real.cpp" \
     || { echo "  FAILED: build/ftgl_real.cpp" >&2; exit 1; }
 ALL_OBJ+=" $BUILD/stub/ftgl_real.cpp.o"

@@ -153,6 +153,7 @@ jobs:
 
       - name: Build
         run: |
+          rm -rf build/obj_macos  # clean incremental build state
           chmod +x scripts/build_macos.sh
           bash scripts/build_macos.sh
 
