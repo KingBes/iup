@@ -193,7 +193,7 @@ if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
     cd "cairo-${CAIRO_VER}"
     meson setup _build --prefix="$CAIRO_PREFIX" --default-library=static \
         -Dtests=disabled \
-        -Dquartz=enabled -Dquartz-image=enabled \
+        -Dquartz=enabled \
         -Dxlib=disabled -Dxcb=disabled \
         -Dpdf=disabled -Dps=disabled -Dsvg=disabled -Dscript=disabled
     ninja -C _build -j"$JOBS"
