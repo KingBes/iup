@@ -191,6 +191,10 @@ if [ ! -f "$CAIRO_PREFIX/lib/libcairo.a" ]; then
     wget -q "https://www.cairographics.org/releases/cairo-${CAIRO_VER}.tar.xz"
     tar xJf "cairo-${CAIRO_VER}.tar.xz"; rm -f "cairo-${CAIRO_VER}.tar.xz"
     cd "cairo-${CAIRO_VER}"
+    # Fix lzo include path: Homebrew's lzo pkg-config returns -I.../lzo
+    # but cairo-script-file.c does #include <lzo/lzo2a.h>, needs parent dir
+    LZO_PREFIX="$(brew --prefix lzo 2>/dev/null || echo /opt/homebrew/opt/lzo)"
+    LZO_CFLAGS="-I${LZO_PREFIX}/include" LZO_LIBS="-L${LZO_PREFIX}/lib -llzo2" \
     meson setup _build --prefix="$CAIRO_PREFIX" --default-library=static \
         -Dtests=disabled \
         -Dquartz=enabled \
