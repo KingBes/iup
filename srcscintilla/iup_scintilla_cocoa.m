@@ -25,7 +25,7 @@ void iupdrvScintillaOpen(void) {}
 
 int idrvScintillaMap(Ihandle* ih)
 {
-  NSView* parent = (__bridge NSView*)IupGetAttribute(ih, "HWND");
+  NSView* parent = (__bridge NSView*)(void*)IupGetAttribute(ih, "HWND");
   int w = ih->currentwidth;
   int h = ih->currentheight;
   if (w <= 0) w = 100;
