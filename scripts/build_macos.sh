@@ -160,7 +160,7 @@ fi
 add_pkgpath "$PANGO_PREFIX"
 
 # ===================================================================
-# pixman (autotools) - needed by cairo
+# pixman (meson) - needed by cairo
 # ===================================================================
 PIXMAN_VER="0.44.2"
 PIXMAN_PREFIX="$DEPS/pixman"
@@ -171,10 +171,11 @@ if [ ! -f "$PIXMAN_PREFIX/lib/libpixman-1.a" ]; then
     wget -q "https://www.cairographics.org/releases/pixman-${PIXMAN_VER}.tar.gz"
     tar xzf "pixman-${PIXMAN_VER}.tar.gz"; rm -f "pixman-${PIXMAN_VER}.tar.gz"
     cd "pixman-${PIXMAN_VER}"
-    autoreconf -fi
-    ./configure --prefix="$PIXMAN_PREFIX" --enable-static --disable-shared \
-        --disable-gtk --disable-libpng
-    make -j"$JOBS"; make install; cd "$ROOT"
+    meson setup _build --prefix="$PIXMAN_PREFIX" --default-library=static \
+        -Dtests=disabled -Ddemos=disabled -Dgtk=disabled -Dlibpng=disabled
+    ninja -C _build -j"$JOBS"
+    ninja -C _build install
+    cd "$ROOT"
 fi
 add_pkgpath "$PIXMAN_PREFIX"
 
