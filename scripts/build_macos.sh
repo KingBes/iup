@@ -80,7 +80,7 @@ if [ ! -f "$GLIB_PREFIX/lib/libglib-2.0.a" ]; then
         -Dtests=false -Dnls=disabled -Doss_fuzz=disabled \
         -Dlibmount=disabled -Ddtrace=false -Dsystemtap=false \
         -Dsysprof=disabled \
-        -Dman=false -Dgtk_doc=false -Dinstalled-tests=false
+        -Dman=false -Dgtk_doc=false
     ninja -C _build -j"$JOBS"
     ninja -C _build install
     cd "$ROOT"
@@ -143,7 +143,7 @@ if [ ! -f "$PANGO_PREFIX/lib/libpango-1.0.a" ]; then
     meson setup _build --prefix="$PANGO_PREFIX" --default-library=static \
         -Dfontconfig=disabled \
         -Dxft=disabled -Dcairo=disabled -Dlibthai=disabled \
-        -Ddocumentation=false
+        -Dgtk_doc=false -Dinstall-tests=false
     ninja -C _build -j"$JOBS"
     ninja -C _build install
     cd "$ROOT"
