@@ -616,15 +616,8 @@ IUP_API void IupConfigRecentUpdate(Ihandle* ih, const char* filename)
 }
 #else
 
-/* NOT supported in MacOS for now */
-
-IUP_API void IupConfigRecentInit(Ihandle* ih, Ihandle* menu_list, Icallback recent_cb, int max_recent)
-{
-}
-
-IUP_API void IupConfigRecentUpdate(Ihandle* ih, const char* filename)
-{
-}
+/* On macOS/Cocoa, IupConfigRecentInit and IupConfigRecentUpdate are
+   implemented in IupAppDelegate.m with native NSDocumentController support. */
 
 #endif /* macOS/Cocoa */
 

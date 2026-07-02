@@ -52,12 +52,6 @@ void cdInitContextPlus(void)
   /* macOS has no ContextPlus driver (gdiplus/xrender/cairo). */
 }
 
-int cdUseContextPlus(int use)
-{
-  (void)use;
-  return 0;
-}
-
 cdContext* cdContextNativeWindowPlus(void)
 {
   return NULL;
