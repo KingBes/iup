@@ -177,10 +177,13 @@ for f in "$SCIBASE"/src/*.cxx "$SCIBASE"/lexlib/*.cxx "$SCIBASE"/lexers/*.cxx; d
     [[ "$f" == *ExternalLexer* ]] && continue
     ALL_OBJ+=" $(compile_cxx "$f" "sci/")"
 done
-for f in srcscintilla/iup_scintilla.c srcscintilla/iup_scintilla_cocoa.c srcscintilla/iupsci_*.c; do
+for f in srcscintilla/iup_scintilla.c srcscintilla/iup_scintilla_cocoa.c \
+         srcscintilla/iup_scintilladlg.c srcscintilla/iupsci_*.c; do
     [ -f "$f" ] || continue
     ALL_OBJ+=" $(compile_c "$f" "sciw/")"
 done
+# GL canvas Cocoa stub
+ALL_OBJ+=" $(compile_c "srcgl/iup_glcanvas_cocoa.c" "gl/")"
 
 # ===== Link Single Dynamic Library (.dylib) 鈥?闆跺閮ㄤ緷璧?=====
 echo ""

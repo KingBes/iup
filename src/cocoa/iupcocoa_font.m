@@ -569,3 +569,21 @@ void iupdrvFontFinish(void)
 	s_defaultFont = nil;
 #endif
 }
+
+void iupdrvFontGetFontDim(const char* font, int *max_width, int *line_height, int *ascent, int *descent)
+{
+	IupCocoaFont* iup_font = cocoaFindFont(font);
+	if(!iup_font)
+	{
+		if (max_width)   *max_width = 0;
+		if (line_height) *line_height = 0;
+		if (ascent)      *ascent = 0;
+		if (descent)     *descent = 0;
+		return;
+	}
+
+	if (max_width)   *max_width = [iup_font charWidth];
+	if (line_height) *line_height = [iup_font charHeight];
+	if (ascent)      *ascent = [iup_font charHeight] * 4 / 5;
+	if (descent)     *descent = [iup_font charHeight] / 5;
+}
