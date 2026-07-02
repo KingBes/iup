@@ -1,7 +1,7 @@
 #!/bin/bash
 # ===================================================================
-#  IUP macOS Cocoa Build 鈥?鍗?.dylib + .a + headers (闆跺閮ㄤ緷璧?
-#  渚濊禆: Xcode CLT + Homebrew freetype (闈欐€侀摼鎺?
+#  IUP macOS Cocoa Build - Single .dylib + .a (self-contained)
+#  依赖: Xcode CLT (freetype/zlib 从源码构建)
 # ===================================================================
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,39 +10,42 @@ cd "$ROOT"
 JOBS=${JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}
 BUILD="$ROOT/build/obj_macos"
 OUT="$ROOT/build/macos"
-mkdir -p "$BUILD" "$OUT"
+DEPS="$ROOT/build/deps_macos"
+mkdir -p "$BUILD" "$OUT" "$DEPS"
 
 CC=clang
 CXX=clang++
 
-# Finder Homebrew (Apple Silicon: /opt/homebrew, Intel: /usr/local)
-if [ -d "/opt/homebrew" ]; then
-    HOMEBREW_PREFIX="/opt/homebrew"
-elif [ -d "/usr/local/Homebrew" ]; then
-    HOMEBREW_PREFIX="/usr/local"
-else
-    HOMEBREW_PREFIX=""
+# ===== Build freetype + zlib from source (with -fPIC) =====
+FREETYPE_VER="2.13.2"
+ZLIB_VER="1.3.1"
+FREETYPE_PREFIX="$DEPS/freetype"
+ZLIB_PREFIX="$DEPS/zlib"
+
+if [ ! -f "$FREETYPE_PREFIX/lib/libfreetype.a" ]; then
+    echo "=== Building freetype $FREETYPE_VER ==="
+    cd "$DEPS"
+    curl -sL "https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE_VER.tar.xz" | tar xJ
+    cd "freetype-$FREETYPE_VER"
+    ./configure --prefix="$FREETYPE_PREFIX" --with-pic --enable-static --disable-shared --without-harfbuzz --without-brotli --without-png --without-bzip2
+    make -j"$JOBS"
+    make install
+    cd "$ROOT"
 fi
 
-# Detect freetype via brew or fallback to common paths
-FREETYPE_INC=""
-FREETYPE_LIB=""
-if command -v brew >/dev/null 2>&1; then
-    FT_PREFIX=$(brew --prefix freetype 2>/dev/null || true)
-    if [ -n "$FT_PREFIX" ] && [ -f "$FT_PREFIX/include/ft2build.h" ]; then
-        FREETYPE_INC="-I$FT_PREFIX/include/freetype2 -I$FT_PREFIX/include"
-        FREETYPE_LIB="-L$FT_PREFIX/lib -lfreetype"
-        echo "Freetype: $FT_PREFIX"
-    fi
+if [ ! -f "$ZLIB_PREFIX/lib/libz.a" ]; then
+    echo "=== Building zlib $ZLIB_VER ==="
+    cd "$DEPS"
+    curl -sL "https://zlib.net/zlib-$ZLIB_VER.tar.gz" | tar xz
+    cd "zlib-$ZLIB_VER"
+    CC="$CC" CFLAGS="-fPIC -O2" ./configure --prefix="$ZLIB_PREFIX" --static
+    make -j"$JOBS"
+    make install
+    cd "$ROOT"
 fi
-if [ -z "$FREETYPE_INC" ] && [ -n "$HOMEBREW_PREFIX" ] && [ -f "$HOMEBREW_PREFIX/include/ft2build.h" ]; then
-    FREETYPE_INC="-I$HOMEBREW_PREFIX/include/freetype2 -I$HOMEBREW_PREFIX/include"
-    FREETYPE_LIB="-L$HOMEBREW_PREFIX/lib -lfreetype"
-    echo "Freetype: $HOMEBREW_PREFIX"
-fi
-if [ -z "$FREETYPE_INC" ]; then
-    echo "WARNING: freetype not found, building without CD SIM font support"
-fi
+
+DEPS_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include -I$ZLIB_PREFIX/include"
+DEPS_LIBS="$FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
 
 # ===== Common flags =====
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DMGL_STATIC_DEFINE -DMGL_SRC -DNO_FONTCONFIG -DUSE_ICONV"
@@ -50,7 +53,7 @@ CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wn
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -Wno-reorder -Wno-write-strings -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 OBJCFLAGS="-fPIC -Wall -O2"
 
-INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 $FREETYPE_INC"
+INCLUDES="-Iinclude -Isrc -Isrc/cocoa -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 $DEPS_CFLAGS"
 
 echo "=== macOS Cocoa Build ==="
 echo "Jobs: $JOBS"
@@ -175,10 +178,11 @@ done
 echo ""
 echo "=== Linking libiup.dylib (self-contained) ==="
 # 闈欐€侀摼鎺?freetype/bz2/png锛屾鏋跺拰绯荤粺搴撲繚鎸佸姩鎬?
+# freetype/z 用本地构建的静态库；Cocoa/OpenGL 为系统框架
 $CXX -dynamiclib -o "$OUT/libiup.dylib" $ALL_OBJ \
-    $FREETYPE_LIB \
+    $DEPS_LIBS \
     -framework Cocoa -framework OpenGL \
-    -lz -lm -lpthread
+    -lm -lpthread
 
 echo "=== Creating libiup.a ==="
 ar rcs "$OUT/libiup.a" $ALL_OBJ

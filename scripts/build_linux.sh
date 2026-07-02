@@ -1,8 +1,8 @@
 #!/bin/bash
 # ===================================================================
-#  IUP Linux GTK3 Build 鈥?鍗?.so + .a + headers
-#  渚濊禆: apt install libgtk-3-dev libfreetype-dev libftgl-dev
-#        zlib1g-dev libglu1-mesa-dev libcairo2-dev
+#  IUP Linux GTK3 Build - Single .so + .a (self-contained)
+#  依赖: apt install libgtk-3-dev libglu1-mesa-dev libcairo2-dev
+#        (freetype/zlib 从源码构建，无运行时依赖)
 # ===================================================================
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,10 +11,42 @@ cd "$ROOT"
 JOBS=${JOBS:-$(nproc)}
 BUILD="$ROOT/build/obj_linux"
 OUT="$ROOT/build/linux"
-mkdir -p "$BUILD" "$OUT"
+DEPS="$ROOT/build/deps_linux"
+mkdir -p "$BUILD" "$OUT" "$DEPS"
 
 CC=gcc
 CXX=g++
+
+# ===== Build freetype + zlib from source (with -fPIC) =====
+FREETYPE_VER="2.13.2"
+ZLIB_VER="1.3.1"
+FREETYPE_PREFIX="$DEPS/freetype"
+ZLIB_PREFIX="$DEPS/zlib"
+
+if [ ! -f "$FREETYPE_PREFIX/lib/libfreetype.a" ]; then
+    echo "=== Building freetype $FREETYPE_VER ==="
+    cd "$DEPS"
+    curl -sL "https://download.savannah.gnu.org/releases/freetype/freetype-$FREETYPE_VER.tar.xz" | tar xJ
+    cd "freetype-$FREETYPE_VER"
+    ./configure --prefix="$FREETYPE_PREFIX" --with-pic --enable-static --disable-shared --without-harfbuzz --without-brotli --without-png --without-bzip2 --without-brotli
+    make -j"$JOBS"
+    make install
+    cd "$ROOT"
+fi
+
+if [ ! -f "$ZLIB_PREFIX/lib/libz.a" ]; then
+    echo "=== Building zlib $ZLIB_VER ==="
+    cd "$DEPS"
+    curl -sL "https://zlib.net/zlib-$ZLIB_VER.tar.gz" | tar xz
+    cd "zlib-$ZLIB_VER"
+    CC="$CC" CFLAGS="-fPIC -O2" ./configure --prefix="$ZLIB_PREFIX" --static
+    make -j"$JOBS"
+    make install
+    cd "$ROOT"
+fi
+
+DEPS_CFLAGS="-I$FREETYPE_PREFIX/include/freetype2 -I$FREETYPE_PREFIX/include -I$ZLIB_PREFIX/include"
+DEPS_LIBS="$FREETYPE_PREFIX/lib/libfreetype.a $ZLIB_PREFIX/lib/libz.a"
 
 # ===== Common flags =====
 DEFS="-DIUP_BUILD_LIBRARY -DCD_NO_OLD_INTERFACE -DSTATIC_BUILD -DSCI_LEXER -DSCI_NAMESPACE -DSCINTILLA_VERSION='\"3.11.2\"' -D_USE_MATH_DEFINES -DFTGL_LIBRARY_STATIC -DNO_CXX11_REGEX -DMGL_STATIC_DEFINE -DMGL_SRC"
@@ -22,9 +54,8 @@ CFLAGS="-fPIC -Wall -O2 -Wno-unused-function -Wno-incompatible-pointer-types -Wn
 CXXFLAGS="-fPIC -Wall -O2 -std=c++11 -fpermissive -Wno-class-memaccess -Wno-reorder -Wno-write-strings -Wno-stringop-truncation -Wno-unknown-pragmas -Wno-misleading-indentation -Wno-error=deprecated-declarations"
 
 GTK_CFLAGS=$(pkg-config --cflags gtk+-3.0 2>/dev/null || echo "")
-FREETYPE_CFLAGS=$(pkg-config --cflags freetype2 2>/dev/null || echo "")
 
-INCLUDES="-Iinclude -Isrc -Isrc/gtk -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Icd/src/x11 -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 $GTK_CFLAGS $FREETYPE_CFLAGS"
+INCLUDES="-Iinclude -Isrc -Isrc/gtk -Isrcimglib -Isrcgl -Isrcglcontrols -Isrcmglplot -Isrcmglplot/src -Isrctuio -Isrctuio/tuio -Isrctuio/oscpack -Isrcscintilla -Isrcscintilla/scintilla3112/include -Isrcscintilla/scintilla3112/src -Isrcscintilla/scintilla3112/lexlib -Isrcscintilla/scintilla3112/win32 -Isrcscintilla/scintilla3112/lexers -Isrcole -Isrccd -Isrccontrols -Isrcplot -Icd/include -Icd/src -Icd/src/sim -Icd/src/drv -Icd/src/intcgm -Icd/src/svg -Icd/src/minizip -Icd/src/x11 -Iim/include -Iim/src -Iim/src/libtiff -Iim/src/libjpeg -Iim/src/libpng -Iim/src/liblzf -Iim/src/lz4 $GTK_CFLAGS $DEPS_CFLAGS"
 
 echo "=== Linux GTK3 Build ==="
 echo "Jobs: $JOBS"
@@ -149,9 +180,9 @@ ALL_OBJ+=" $FTGL_STUB_OBJ"
 echo ""
 echo "=== Linking libiup.so (self-contained) ==="
 GTK_LIBS=$(pkg-config --libs gtk+-3.0 2>/dev/null || echo "")
-# ftgl 用 stub 替代避免运行时依赖；freetype/z 动态链接 (系统 .a 未编译 -fPIC)
+# freetype/z 用本地构建的静态库；ftgl 用 stub；GTK3/GL/X11 为系统依赖
 $CXX -shared -o "$OUT/libiup.so" $ALL_OBJ \
-    -Wl,-Bdynamic -lfreetype -lz -lGLU \
+    $DEPS_LIBS -lGLU \
     $GTK_LIBS -lGL -lX11 -lXrender -lm -lpthread -ldl
 
 # ===== Static Library (.a) =====
