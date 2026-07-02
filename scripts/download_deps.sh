@@ -36,7 +36,8 @@ fi
 
 # Patch tif_config.h: enable HAVE_UNISTD_H for Unix-like systems
 if [ -f "$ROOT/im/src/libtiff/tif_config.h" ]; then
-    sed -i 's/^#undef HAVE_UNISTD_H$/#define HAVE_UNISTD_H/' "$ROOT/im/src/libtiff/tif_config.h"
+    sed -i.bak 's/^#undef HAVE_UNISTD_H$/#define HAVE_UNISTD_H/' "$ROOT/im/src/libtiff/tif_config.h"
+    rm -f "$ROOT/im/src/libtiff/tif_config.h.bak"
     echo "Patched tif_config.h: HAVE_UNISTD_H enabled"
 fi
 
