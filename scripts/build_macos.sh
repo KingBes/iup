@@ -451,7 +451,13 @@ done
 for f in "$SCI_SRC"/cocoa/*.cxx "$SCI_SRC"/cocoa/*.mm; do
     [ -f "$f" ] || continue
     if [[ "$f" == *.mm ]]; then
-        ALL_OBJ+=" $(compile_mm "$f" "scicocoa/")"
+        # Scintilla Cocoa uses __weak references which require ARC
+        _obj="$BUILD/scicocoa/${f##*/}.o"
+        mkdir -p "$(dirname "$_obj")"
+        echo "  [MM+ARC] $f" >&2
+        $CXX -c $OBJCXXFLAGS -fobjc-arc $DEFS $INCLUDES -o "$_obj" "$f" \
+            || { echo "  FAILED: $f" >&2; exit 1; }
+        ALL_OBJ+=" $_obj"
     else
         ALL_OBJ+=" $(compile_cxx "$f" "scicocoa/")"
     fi
@@ -460,7 +466,14 @@ done
 # ===== IUP Scintilla wrapper + GL canvas =====
 echo "[7/7] IUP Scintilla + GL"
 ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilla.c" "sciw/")"
-ALL_OBJ+=" $(compile_m "srcscintilla/iup_scintilla_cocoa.m" "sciw/")"
+# ScintillaView is ARC-managed, so this wrapper needs ARC too
+_sci_cocoa_obj="$BUILD/sciw/iup_scintilla_cocoa.o"
+mkdir -p "$(dirname "$_sci_cocoa_obj")"
+echo "  [M+ARC] srcscintilla/iup_scintilla_cocoa.m" >&2
+$CC -c -x objective-c $OBJCFLAGS -fobjc-arc $DEFS $INCLUDES \
+    -o "$_sci_cocoa_obj" "srcscintilla/iup_scintilla_cocoa.m" \
+    || { echo "  FAILED: srcscintilla/iup_scintilla_cocoa.m" >&2; exit 1; }
+ALL_OBJ+=" $_sci_cocoa_obj"
 ALL_OBJ+=" $(compile_c "srcscintilla/iup_scintilladlg.c" "sciw/")"
 for f in srcscintilla/iupsci_*.c; do
     [ -f "$f" ] || continue
