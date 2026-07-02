@@ -101,6 +101,7 @@ for d in srccd srccontrols srcgl srcglcontrols srcim srcimglib srcplot srcmglplo
         [[ "$f" == *dep/* ]] && continue
         [[ "$f" == *win32* || "$f" == *Win32* || "$f" == *_win32* || "$f" == *_win.c || "$f" == *_win.cpp ]] && continue
         [[ "$f" == *gtk* || "$f" == *cocoa* || "$f" == *haiku* ]] && continue
+        [[ "$f" == *_x.c || "$f" == *_x11* || "$f" == *x11* ]] && continue  # X11/Linux backend, not for macOS
         [[ "$f" == *iup_glfont.c || "$f" == *cdgl.c ]] && continue
         [[ "$f" == *dx* || "$f" == *DX* || "$f" == *avi* || "$f" == *wmv* || "$f" == *jp2* || "$f" == *ecw* ]] && continue
         [[ "$f" == *jas_* ]] && continue
@@ -126,6 +127,7 @@ done
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
     [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* || "$f" == *im_capture_dx* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* || "$f" == *jas_* ]] && continue
+    [[ "$f" == *tiff_binfile* ]] && continue  # tif_unix.c already provides these on macOS
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else

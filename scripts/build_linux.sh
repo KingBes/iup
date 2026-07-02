@@ -105,6 +105,7 @@ done
 for f in im/src/*.cpp im/src/*.c; do
     [ -f "$f" ] || continue
     [[ "$f" == *im_dib* || "$f" == *im_sysfile_win32* || "$f" == *im_capture_dx* || "$f" == *im_format_avi* || "$f" == *im_format_wmv* || "$f" == *im_format_ecw* || "$f" == *im_format_jp2* || "$f" == *jas_* ]] && continue
+    [[ "$f" == *tiff_binfile* ]] && continue  # tif_unix.c already provides these on Linux
     if [[ "$f" == *.cpp ]]; then
         ALL_OBJ+=" $(compile_cxx "$f" "im/")"
     else
@@ -144,10 +145,9 @@ done
 echo ""
 echo "=== Linking libiup.so (self-contained) ==="
 GTK_LIBS=$(pkg-config --libs gtk+-3.0 2>/dev/null || echo "")
-# 闈欐€侀摼鎺?freetype/z/GLU锛坒tgl 淇濈暀鍔ㄦ€侊紝閮ㄥ垎鍙戣鐗堟棤 .a锛?
+# 动态链接 freetype/z/ftgl/GLU (系统 .a 未编译 -fPIC，无法链入 .so)
 $CXX -shared -o "$OUT/libiup.so" $ALL_OBJ \
-    -Wl,-Bstatic -lfreetype -lz -lGLU \
-    -Wl,-Bdynamic -lftgl \
+    -Wl,-Bdynamic -lfreetype -lz -lftgl -lGLU \
     $GTK_LIBS -lGL -lX11 -lXrender -lm -lpthread -ldl
 
 # ===== Static Library (.a) =====
